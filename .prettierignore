@@ -1,0 +1,9 @@
+# Build output and dependencies
+build/
+node_modules/
+
+# Drogon view templates mix HTML and C++; neither formatter handles them
+*.csp
+
+# Drogon generated files
+drogon_ctl_generated/
