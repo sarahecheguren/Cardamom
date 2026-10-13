@@ -46,8 +46,8 @@ printf '\n'
 The server runs on port 8080. Open `/api/health` to check it.
 There isn't a page at `/` yet.
 
-The config.json and config.yaml files aren't currently used.
-The settings are in main.cc.
+The server settings are in main.cc. The database password is read
+from the CARDAMOM_DB_PASSWORD environment variable.
 
 ## Running the password tests
 
