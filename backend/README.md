@@ -8,6 +8,7 @@ Currently working:
 - `/api/health` checks that the server is running.
 - `/api/auth/login` checks the email and password against the database.
 - `/api/auth/me` returns the user's ID if they are logged in.
+- `/api/auth/logout` signs the user out and clears their session.
 
 Passwords are stored as hashes. Login uses a session cookie, and
 restarting the server clears the sessions.
@@ -48,8 +49,19 @@ There isn't a page at `/` yet.
 The config.json and config.yaml files aren't currently used.
 The settings are in main.cc.
 
+## Running the password tests
+
+From the repository root, after building:
+
+```bash
+./backend/build/test/backend_test
+```
+
+The test checks a correct password, an incorrect password, an empty
+password, and an invalid hash.
+
 ## Still to do
 
-Connect this with the team's database and frontend, add registration
-and logout, and finish the HTTPS setup. This is currently for local
+Connect this with the team's database and frontend, add registration,
+and finish the HTTPS setup. This is currently for local
 testing.

@@ -2,8 +2,24 @@
 #include <drogon/drogon.h>
 #include <drogon/drogon_test.h>
 
-DROGON_TEST(BasicTest) {
-    // Add your tests here
+#include "../Password.h"
+
+DROGON_TEST(PasswordVerification) {
+    REQUIRE(sodium_init() >= 0);
+
+    const std::string password = "test-password";
+    char hash[crypto_pwhash_STRBYTES];
+
+    const int result = crypto_pwhash_str_alg(
+        hash, password.data(), password.size(), crypto_pwhash_OPSLIMIT_INTERACTIVE,
+        crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_ARGON2ID13);
+
+    REQUIRE(result == 0);
+
+    CHECK(auth::verifyPassword(password, hash));
+    CHECK(!auth::verifyPassword("wrong-password", hash));
+    CHECK(!auth::verifyPassword("", hash));
+    CHECK(!auth::verifyPassword(password, "not-a-valid-hash"));
 }
 
 int main(int argc, char** argv) {

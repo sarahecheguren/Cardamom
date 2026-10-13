@@ -57,6 +57,22 @@ int main() {
         },
         {drogon::Get});
 
+    drogon::app().registerHandler(
+        "/api/auth/logout",
+        [](const drogon::HttpRequestPtr& req,
+           std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+            req->session()->clear();
+            req->session()->changeSessionIdToClient();
+
+            Json::Value body;
+            body["message"] = "Logout successful.";
+
+            auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+            response->addHeader("Cache-Control", "no-store");
+            callback(response);
+        },
+        {drogon::Post});
+
     drogon::app().enableSession(1800, drogon::Cookie::SameSite::kStrict);
 
     drogon::app().addListener("0.0.0.0", 8080);
