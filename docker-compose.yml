@@ -7,14 +7,14 @@ services:
       MARIADB_USER: ${DB_USER:-cardamom}
       MARIADB_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - '${DB_PORT:-3306}:3306'
     volumes:
       - dbdata:/var/lib/mysql
       # Every .sql file here runs once, in name order, when the volume is empty.
       # Run `docker compose down -v` to wipe the data and re-run them.
       - ./db/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
       interval: 5s
       timeout: 5s
       retries: 10
