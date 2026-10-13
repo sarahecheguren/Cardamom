@@ -131,13 +131,12 @@ app:
     - xml
   # mime: A dictionary that extends the internal MIME type support. Maps extensions into new MIME types
   # note: This option only adds MIME to the sever. `file_types` above have to be set for the server to serve them.
-  mime: {
-    # text/markdown: md,
-    # text/gemini: [gmi, gemini]
-  }
+  mime: {}
+  # text/markdown: md,
+  # text/gemini: [gmi, gemini]
   # locations: An array of locations of static files for GET requests.
   locations:
-      # uri_prefix: The URI prefix of the location prefixed with "/", the default value is "" that disables the location.
+    # uri_prefix: The URI prefix of the location prefixed with "/", the default value is "" that disables the location.
     - uri_prefix: '' # /.well-known/acme-challenge/
       # default_content_type: The default content type of the static files without
       # an extension. empty string by default.
@@ -270,7 +269,7 @@ app:
   enabled_compresed_request: false
 # plugins: Define all plugins running in the application
 plugins:
-    # name: The class name of the plugin
+  # name: The class name of the plugin
   - name: '' # drogon::plugin::SecureSSLRedirector
     # dependencies: Plugins that the plugin depends on. It can be commented out
     dependencies: []

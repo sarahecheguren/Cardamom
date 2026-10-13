@@ -4,6 +4,7 @@ So far, I have the Drogon server running and connected to a local
 MariaDB database for testing login.
 
 Currently working:
+
 - `/api/health` checks that the server is running.
 - `/api/auth/login` checks the email and password against the database.
 - `/api/auth/me` returns the user's ID if they are logged in.

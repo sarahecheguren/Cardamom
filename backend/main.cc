@@ -1,10 +1,11 @@
 #include <drogon/drogon.h>
-#include "Password.h"
 #include <sodium.h>
+
 #include <cstdlib>
 
-int main() {
+#include "Password.h"
 
+int main() {
     if (sodium_init() < 0) {
         LOG_ERROR << "Could not initialize libsodium";
         return 1;
@@ -17,17 +18,8 @@ int main() {
         return 1;
     }
 
-    drogon::app().createDbClient(
-        "mysql",
-        "127.0.0.1",
-        3306,
-        "cardamom_auth_dev",
-        "cardamom_login",
-        databasePassword,
-        1,
-        "",
-        "default"
-    );
+    drogon::app().createDbClient("mysql", "127.0.0.1", 3306, "cardamom_auth_dev", "cardamom_login",
+                                 databasePassword, 1, "", "default");
 
     drogon::app().registerHandler(
         "/api/health",
@@ -46,8 +38,7 @@ int main() {
         "/api/auth/me",
         [](const drogon::HttpRequestPtr& req,
            std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-            const auto userId =
-                req->session()->get<std::string>("user_id");
+            const auto userId = req->session()->get<std::string>("user_id");
 
             Json::Value body;
             auto status = drogon::k200OK;
@@ -59,16 +50,14 @@ int main() {
                 body["user"]["id"] = userId;
             }
 
-            auto response =
-                drogon::HttpResponse::newHttpJsonResponse(body);
+            auto response = drogon::HttpResponse::newHttpJsonResponse(body);
             response->setStatusCode(status);
             response->addHeader("Cache-Control", "no-store");
             callback(response);
         },
         {drogon::Get});
 
-    drogon::app().enableSession(
-        1800, drogon::Cookie::SameSite::kStrict);
+    drogon::app().enableSession(1800, drogon::Cookie::SameSite::kStrict);
 
     drogon::app().addListener("0.0.0.0", 8080);
     drogon::app().run();
