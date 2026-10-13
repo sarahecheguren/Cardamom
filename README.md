@@ -48,3 +48,41 @@ There is no SQL formatter. Keep keywords uppercase and one clause per line in sc
 2. Commit your work and push the branch.
 3. Open a pull request into `main`. Direct pushes to `main` are blocked.
 4. Wait for the format checks to pass and get one approval, then merge.
+
+## Database
+
+MariaDB runs in Docker. You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### First-time setup
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+The first command creates your local credentials file. The second command downloads MariaDB and starts it on port 3306. Once MariaDB starts it runs every file in the `db/migrations/` directory to create the tables.
+
+### Everday commands
+
+```bash
+docker compose up -d     ##starts the database
+docker compose down      ##stops the database, but keeps the data
+docker compose down -v.  ##stops the database and deletes all the data
+```
+
+To open a SQL prompt inside the container:
+
+```bash
+docker compose exec db mariadb -u cardamom -p cardamom
+```
+
+The password is the `DB_PASSWORD` value from your `.env` file.
+
+### If there are schema changes
+
+If you need to bring in new migrations, reset the database.
+
+```bash
+docker compose down -v
+docker compose up -d
+```
