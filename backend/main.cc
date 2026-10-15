@@ -75,6 +75,8 @@ int main() {
 
     drogon::app().enableSession(1800, drogon::Cookie::SameSite::kStrict);
 
+    drogon::app().setDocumentRoot("./frontend");
+
     drogon::app().addListener("0.0.0.0", 8080);
     drogon::app().run();
     return 0;
