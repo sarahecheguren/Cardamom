@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create an account | Cardamom</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html"
+        >Cardamom<span>your recipe notebook</span></a
+      >
+      <a class="header-link" href="index.html">Back to log in &rarr;</a>
+    </header>
+    <main class="auth-layout">
+      <section class="introduction" aria-labelledby="intro-title">
+        <p class="eyebrow">Make room for your next favorite.</p>
+        <h1 id="intro-title">Good recipes<br />deserve a home.</h1>
+        <p class="intro-copy">
+          Keep the family favorites, the small adjustments, and the recipes you
+          want to try next, together.
+        </p>
+        <div class="recipe-note" aria-label="Example cooking note">
+          <p class="eyebrow">More than ingredients</p>
+          <h2>Make it your own.</h2>
+          <p>
+            A little more lemon. A little less sugar.<br />Remember what worked
+            last time.
+          </p>
+          <span class="note-tag">Your recipes. Your notes.</span>
+        </div>
+      </section>
+      <section class="form-card" aria-labelledby="form-title">
+        <p class="eyebrow">Start your collection</p>
+        <h2 id="form-title">Welcome to Cardamom.</h2>
+        <p class="form-intro">Create an account for your recipe notebook.</p>
+        <noscript
+          ><p class="form-message">
+            Enable JavaScript to try this form preview.
+          </p></noscript
+        >
+        <form id="auth-form" data-mode="register" novalidate>
+          <div class="field">
+            <label for="display-name">Display name</label>
+            <input
+              id="display-name"
+              type="text"
+              autocomplete="nickname"
+              required
+              aria-describedby="display-name-error"
+            />
+            <p id="display-name-error" class="field-error"></p>
+          </div>
+          <div class="field">
+            <label for="email">Email address</label>
+            <input
+              id="email"
+              type="email"
+              autocomplete="username"
+              required
+              aria-describedby="email-error"
+            />
+            <p id="email-error" class="field-error"></p>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              autocomplete="new-password"
+              required
+              aria-describedby="password-error"
+            />
+            <p id="password-error" class="field-error"></p>
+          </div>
+          <div class="field">
+            <label for="confirm-password">Confirm password</label>
+            <input
+              id="confirm-password"
+              type="password"
+              autocomplete="new-password"
+              required
+              aria-describedby="confirm-password-error"
+            />
+            <p id="confirm-password-error" class="field-error"></p>
+          </div>
+          <label class="checkbox-label"
+            ><input id="show-password" type="checkbox" /> Show passwords</label
+          >
+          <button class="submit-button" type="submit" disabled>
+            Create account
+          </button>
+          <p
+            id="form-message"
+            class="form-message"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
+        </form>
+        <p class="switch-page">
+          Already have an account? <a href="index.html">Log in</a>
+        </p>
+      </section>
+    </main>
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>
