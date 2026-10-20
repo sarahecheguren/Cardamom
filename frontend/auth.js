@@ -10,7 +10,6 @@ const submitButton = form.querySelector('[type="submit"]');
 const logoutButton = document.querySelector('#logout-button');
 const isLoginPage = form.dataset.mode === 'login';
 
-
 function showMessage(text, success = false) {
   message.textContent = text;
   message.classList.toggle('is-success', success);
