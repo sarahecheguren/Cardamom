@@ -2,6 +2,7 @@
 #include <sodium.h>
 
 #include <cstdlib>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 
@@ -97,6 +98,13 @@ int main() {
         {drogon::Post});
 
     drogon::app().enableSession(1800, drogon::Cookie::SameSite::kStrict);
+
+    const std::string frontendDir = readSetting("FRONTEND_DIR", "./frontend");
+    if (!std::filesystem::is_directory(frontendDir)) {
+        LOG_WARN << "Frontend directory not found at " << frontendDir
+                 << ". Run from the repository root or set FRONTEND_DIR.";
+    }
+    drogon::app().setDocumentRoot(frontendDir);
 
     drogon::app().addListener("0.0.0.0", 8080);
     drogon::app().run();
