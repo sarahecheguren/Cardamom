@@ -124,6 +124,7 @@ if (isLoginPage) {
       }
       setLoggedIn(false);
       form.reset();
+      password.type = 'password';
       showMessage('You have been logged out.', true);
     } catch (error) {
       showMessage('Cannot reach the backend to log out.');
