@@ -28,6 +28,10 @@ function validateField(field) {
   let error = '';
   if (!field.value.trim()) {
     error = 'Please fill in this field.';
+  } else if (!isLoginPage && field === password && field.value.length < 8) {
+    error = 'Password must be at least 8 characters.';
+  } else if (field === displayName && field.value.trim().length > 100) {
+    error = 'Display name must be 100 characters or fewer.';
   } else if (field.type === 'email' && field.validity.typeMismatch) {
     error = 'Please enter a valid email address.';
   } else if (field === confirmation && field.value !== password.value) {
