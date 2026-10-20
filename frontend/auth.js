@@ -4,10 +4,12 @@ const message = document.querySelector('#form-message');
 const password = document.querySelector('#password');
 const confirmation = document.querySelector('#confirm-password');
 const email = document.querySelector('#email');
+const displayName = document.querySelector('#display-name');
 const fields = Array.from(form.querySelectorAll('.field input'));
 const submitButton = form.querySelector('[type="submit"]');
 const logoutButton = document.querySelector('#logout-button');
 const isLoginPage = form.dataset.mode === 'login';
+
 
 function showMessage(text, success = false) {
   message.textContent = text;
