@@ -60,7 +60,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-The first command creates your local credentials file. The second command downloads MariaDB and starts it on port 3306. Once MariaDB starts it runs every file in the `db/migrations/` directory to create the tables.
+The first command creates your local credentials file. The values in `.env.example` are fine for development, and `.env` is gitignored so it never reaches the repo. The second command downloads MariaDB and starts it on port 3306. Once MariaDB starts it runs every file in the `db/migrations/` directory to create the tables.
 
 ### Everday commands
 
@@ -78,11 +78,36 @@ docker compose exec db mariadb -u cardamom -p cardamom
 
 The password is the `DB_PASSWORD` value from your `.env` file.
 
+### Seed data
+
+To fill a running database with demo accounts and recipes:
+
+```bash
+./db/seed.sh
+```
+
+It loads `db/seed.sql`, which is safe to re-run: the seed accounts are deleted and recreated each time, so counts never drift. Every seed account uses the password `Secret123!`.
+
+| Email               | Tier    | Recipes | Favourites | Purpose                            |
+| ------------------- | ------- | ------- | ---------- | ---------------------------------- |
+| `maya@example.com`  | Free    | 25      | 0          | Exactly at the Free limit          |
+| `theo@example.com`  | Free    | 24      | 1          | At the limit once favourites count |
+| `priya@example.com` | Premium | 30      | 2          | More recipes than the Free limit   |
+| `sam@example.com`   | Free    | 3       | 2          | Below the limit                    |
+| `nina@example.com`  | Free    | 0       | 0          | Empty collection                   |
+| `bulk@example.com`  | Premium | 500     | 0          | Premium limit, for search timing   |
+
 ### If there are schema changes
 
-If you need to bring in new migrations, reset the database.
+Migrations run only once, when the data volume is first created. If you need to bring in new migrations, reset the database.
 
 ```bash
 docker compose down -v
 docker compose up -d
 ```
+
+This deletes any data you added locally.
+
+### Adding a migration
+
+Create a new numbered file in `db/migrations/`, for example `005_recipe_tags.sql`. Follow the SQL formatting rules above, then reset the database as described in the previous section to test it. Each file should be safe to run on a fresh database, since that is the only way they are ever executed.
