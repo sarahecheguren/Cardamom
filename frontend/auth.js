@@ -86,10 +86,34 @@ form.addEventListener('submit', async (event) => {
   }
 
   if (!isLoginPage) {
-    // The backend does not have a registration API yet.
-    showMessage('Registration is not available yet. No account was created.');
-    password.value = '';
-    if (confirmation) confirmation.value = '';
+    submitButton.disabled = true;
+
+    try {
+      const { response, body } = await requestApi('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: displayName.value.trim(),
+          email: email.value.trim(),
+          password: password.value,
+        }),
+      });
+
+      if (!response.ok) {
+        showMessage(body.error || 'Unable to create account. Please try again.');
+        return;
+      }
+
+      form.reset();
+      showMessage(body.message || 'Account created. You can now log in.', true);
+    } catch (error) {
+      showMessage('Cannot reach the backend. Please try again later.');
+    } finally {
+      password.value = '';
+      if (confirmation) confirmation.value = '';
+      submitButton.disabled = false;
+    }
+
     return;
   }
 
