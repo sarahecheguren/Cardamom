@@ -105,6 +105,8 @@ form.addEventListener('submit', async (event) => {
       }
 
       form.reset();
+      password.type = 'password';
+      if (confirmation) confirmation.type = 'password';
       showMessage(body.message || 'Account created. You can now log in.', true);
     } catch (error) {
       showMessage('Cannot reach the backend. Please try again later.');
