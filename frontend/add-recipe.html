@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Add Recipe | Cardamom</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="add-recipe.css" />
+    <script src="add-recipe.js" defer></script>
+  </head>
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="dashboard.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <a href="dashboard.html">My Recipes</a>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="page-intro">
+        <p class="eyebrow">Your personal cookbook</p>
+        <h1>Add a Recipe</h1>
+        <p>Save the recipes you love so you can make them again.</p>
+      </section>
+
+      <form id="recipe-form" class="recipe-form">
+        <div class="form-field">
+          <label for="recipe-name">Recipe name</label>
+          <input
+            id="recipe-name"
+            name="name"
+            type="text"
+            placeholder="e.g. Homemade Lasagna"
+            maxlength="200"
+            required
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="servings">Servings</label>
+            <input id="servings" name="servings" type="number" min="1" />
+          </div>
+
+          <div class="form-field">
+            <label for="prep-time">Prep time (minutes)</label>
+            <input id="prep-time" name="prep_minutes" type="number" min="0" />
+          </div>
+
+          <div class="form-field">
+            <label for="cook-time">Cook time (minutes)</label>
+            <input id="cook-time" name="cook_minutes" type="number" min="0" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="ingredients">Ingredients</label>
+          <textarea
+            id="ingredients"
+            name="ingredient_list"
+            rows="7"
+            placeholder="List your ingredients here..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="instructions">Cooking instructions</label>
+          <textarea
+            id="instructions"
+            name="steps"
+            rows="7"
+            placeholder="Describe how to prepare the recipe..."
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="notes">Additional notes</label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows="4"
+            placeholder="Any tips or changes for next time?"
+          ></textarea>
+        </div>
+
+        <div class="form-actions">
+          <a href="dashboard.html" class="cancel-link">Cancel</a>
+          <button type="submit" class="add-button" disabled>Save Recipe</button>
+        </div>
+
+        <p class="form-note">Recipe saving will be available after backend integration.</p>
+      </form>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>

@@ -1,0 +1,112 @@
+/* Titulo da pagina */
+.page-intro {
+  max-width: 720px;
+  margin-bottom: 38px;
+}
+
+.page-intro h1 {
+  margin-bottom: 14px;
+}
+
+.page-intro p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+/* Formulario para adicionar receitas */
+.recipe-form {
+  max-width: 850px;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.form-field label {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: white;
+  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: var(--green);
+}
+
+.form-field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+/* Botoes do formulario */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.cancel-link {
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.cancel-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.form-note {
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+/* Ajustes para celulares */
+@media (max-width: 680px) {
+  .page-intro {
+    margin-bottom: 28px;
+  }
+
+  .recipe-form {
+    padding: 24px 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+}

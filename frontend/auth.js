@@ -134,6 +134,9 @@ form.addEventListener('submit', async (event) => {
 
     setLoggedIn(true);
     showMessage('Logged in as ' + (body.user?.email || email.value.trim()) + '.', true);
+
+    // Leva o usuario para o dashboard depois do login
+    window.location.assign('dashboard.html');
   } catch (error) {
     showMessage(
       'Cannot reach the backend. Open the site through the Drogon server at http://localhost:8080.'
