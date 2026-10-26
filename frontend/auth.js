@@ -171,8 +171,7 @@ if (isLoginPage) {
   requestApi('/api/auth/me')
     .then(({ response, body }) => {
       if (response.ok && body.user?.id) {
-        setLoggedIn(true);
-        showMessage('You are already signed in (user ID: ' + body.user.id + ').', true);
+        window.location.replace('dashboard.html');
       }
     })
     .catch(() => {
