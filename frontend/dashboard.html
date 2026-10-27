@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Recipes | Cardamom</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <script src="dashboard.js" defer></script>
+  </head>
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="index.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <span class="current-page">My Recipes</span>
+        <button id="logout-button" type="button">Log out</button>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="welcome-section">
+        <div>
+          <p class="eyebrow">Your personal cookbook</p>
+          <h1>My Recipes</h1>
+          <p>Keep all your favorite recipes in one place.</p>
+        </div>
+
+        <a href="add-recipe.html" class="add-button">+ Add Recipe</a>
+      </section>
+
+      <section class="recipes-section" aria-labelledby="recipes-heading">
+        <div class="section-heading">
+          <h2 id="recipes-heading">Your collection</h2>
+          <span class="demo-label">Example recipes</span>
+        </div>
+
+        <div class="recipe-grid">
+          <article class="recipe-card">
+            <div class="recipe-image">Pancakes</div>
+            <div class="recipe-content">
+              <span class="recipe-category">Breakfast</span>
+              <h3>Sunday Pancakes</h3>
+              <p>Fluffy homemade pancakes for a relaxing morning.</p>
+              <span class="recipe-time">25 minutes</span>
+            </div>
+          </article>
+
+          <article class="recipe-card">
+            <div class="recipe-image">Pasta</div>
+            <div class="recipe-content">
+              <span class="recipe-category">Dinner</span>
+              <h3>Creamy Garlic Pasta</h3>
+              <p>A quick pasta dish with garlic and parmesan.</p>
+              <span class="recipe-time">30 minutes</span>
+            </div>
+          </article>
+
+          <article class="recipe-card">
+            <div class="recipe-image">Cookies</div>
+            <div class="recipe-content">
+              <span class="recipe-category">Dessert</span>
+              <h3>Chocolate Chip Cookies</h3>
+              <p>Classic homemade cookies with chocolate chips.</p>
+              <span class="recipe-time">35 minutes</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>
