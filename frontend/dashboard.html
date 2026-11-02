@@ -34,40 +34,12 @@
       <section class="recipes-section" aria-labelledby="recipes-heading">
         <div class="section-heading">
           <h2 id="recipes-heading">Your collection</h2>
-          <span class="demo-label">Example recipes</span>
+          <span id="recipe-count" class="demo-label"></span>
         </div>
 
-        <div class="recipe-grid">
-          <article class="recipe-card">
-            <div class="recipe-image">Pancakes</div>
-            <div class="recipe-content">
-              <span class="recipe-category">Breakfast</span>
-              <h3>Sunday Pancakes</h3>
-              <p>Fluffy homemade pancakes for a relaxing morning.</p>
-              <span class="recipe-time">25 minutes</span>
-            </div>
-          </article>
+        <p id="collection-message" role="status" aria-live="polite">Loading your recipes...</p>
 
-          <article class="recipe-card">
-            <div class="recipe-image">Pasta</div>
-            <div class="recipe-content">
-              <span class="recipe-category">Dinner</span>
-              <h3>Creamy Garlic Pasta</h3>
-              <p>A quick pasta dish with garlic and parmesan.</p>
-              <span class="recipe-time">30 minutes</span>
-            </div>
-          </article>
-
-          <article class="recipe-card">
-            <div class="recipe-image">Cookies</div>
-            <div class="recipe-content">
-              <span class="recipe-category">Dessert</span>
-              <h3>Chocolate Chip Cookies</h3>
-              <p>Classic homemade cookies with chocolate chips.</p>
-              <span class="recipe-time">35 minutes</span>
-            </div>
-          </article>
-        </div>
+        <div id="recipe-grid" class="recipe-grid"></div>
       </section>
     </main>
 
