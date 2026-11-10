@@ -109,4 +109,4 @@ logoutButton.addEventListener('click', async () => {
   }
 });
 
-loadRecipes();
+void loadRecipes();
