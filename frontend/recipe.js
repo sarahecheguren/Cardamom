@@ -100,4 +100,4 @@ async function loadRecipe() {
 }
 
 // Load the recipe when the page opens
-loadRecipe();
+void loadRecipe();
