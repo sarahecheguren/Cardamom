@@ -10,6 +10,8 @@ Currently working:
 - `POST /api/auth/login` checks the email and password and starts a session.
 - `GET /api/auth/me` returns the user's ID if they are logged in.
 - `POST /api/auth/logout` clears the session.
+- `POST /api/recipes` saves a recipe for the logged-in user.
+- `GET /api/recipes` returns the logged-in user's recipes.
 
 Passwords are stored as Argon2id hashes. Restarting the backend
 clears the login sessions.
@@ -60,8 +62,12 @@ set +a
 The backend reads DB_NAME, DB_USER, DB_PASSWORD, and DB_PORT.
 DB_HOST defaults to 127.0.0.1.
 
-The server runs on port 8080. Open /api/health to check it.
-There isn't a page at / on this branch yet.
+The server runs on port 8080 and serves the frontend.
+Users can register, log in, add recipes, and see their saved
+recipes on My Recipes.
+
+Run the backend from the repository root so it can find the
+frontend folder.
 
 ## Trying registration
 
@@ -94,5 +100,5 @@ an empty password, and an invalid hash.
 
 ## Still to do
 
-Connect registration with the frontend and finish the HTTPS setup.
-This is currently for local testing.
+Add the individual recipe view, profiles, and recipe-limit enforcement,
+and finish the HTTPS setup. This is currently for local testing.
