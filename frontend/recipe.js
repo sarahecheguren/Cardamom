@@ -6,6 +6,7 @@ const recipeCook = document.querySelector('#recipe-cook');
 const recipeIngredients = document.querySelector('#recipe-ingredients');
 const recipeSteps = document.querySelector('#recipe-steps');
 const recipeNotes = document.querySelector('#recipe-notes');
+const deleteRecipeButton = document.querySelector('#delete-recipe-button');
 
 // Displays a message if something goes wrong
 function showError(message) {
@@ -34,6 +35,8 @@ function displayRecipe(recipe) {
 
   recipeMessage.textContent = '';
   document.title = `${recipe.name} | Cardamom`;
+
+  deleteRecipeButton.hidden = false;
 }
 
 // Checks login and loads the selected recipe
@@ -98,6 +101,59 @@ async function loadRecipe() {
     showError('Could not connect to the server. Please try again.');
   }
 }
+
+// Deletes the selected recipe after user confirmation
+async function deleteRecipe() {
+  const parameters = new URLSearchParams(window.location.search);
+  const recipeId = parameters.get('id');
+
+  if (!recipeId || !/^[1-9]\d*$/.test(recipeId)) {
+    recipeMessage.textContent = 'Invalid recipe ID.';
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${recipeName.textContent}"? This action cannot be undone.`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  deleteRecipeButton.disabled = true;
+  recipeMessage.textContent = 'Deleting recipe...';
+
+  try {
+    const response = await fetch(`/api/recipes/${recipeId}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+
+    if (response.status === 401) {
+      window.location.replace('index.html');
+      return;
+    }
+
+    if (response.ok) {
+      window.location.replace('dashboard.html');
+      return;
+    }
+
+    if (response.status === 404 || response.status === 405) {
+      recipeMessage.textContent =
+        'Recipe deletion is not available yet, or the recipe was not found.';
+    } else {
+      recipeMessage.textContent = 'Unable to delete this recipe. Please try again.';
+    }
+  } catch (error) {
+    recipeMessage.textContent = 'Could not connect to the server. Please try again.';
+  } finally {
+    deleteRecipeButton.disabled = false;
+  }
+}
+
+// Connect the delete button to the deletion function
+deleteRecipeButton.addEventListener('click', deleteRecipe);
 
 // Load the recipe when the page opens
 void loadRecipe();
