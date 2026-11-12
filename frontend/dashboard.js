@@ -15,8 +15,9 @@ function displayRecipes(recipes) {
   collectionMessage.textContent = '';
 
   recipes.forEach((recipe) => {
-    const card = document.createElement('article');
-    card.className = 'recipe-card';
+    const card = document.createElement('a');
+    card.className = 'recipe-card recipe-card-link';
+    card.href = `recipe.html?id=${encodeURIComponent(recipe.id)}`;
 
     const image = document.createElement('div');
     image.className = 'recipe-image';
