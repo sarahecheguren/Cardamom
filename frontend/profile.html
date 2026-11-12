@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Profile | Cardamom</title>
+
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="profile.css" />
+    <script src="profile.js" defer></script>
+  </head>
+
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="dashboard.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <a href="dashboard.html">My Recipes</a>
+        <span class="current-page">My Profile</span>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="profile-intro">
+        <p class="eyebrow">Your personal cookbook</p>
+        <h1>My Profile</h1>
+        <p>View your account information and recipe collection.</p>
+      </section>
+
+      <p id="profile-message" role="status" aria-live="polite">
+        Profile information will be available after backend integration.
+      </p>
+
+      <section class="profile-card" aria-labelledby="account-heading">
+        <h2 id="account-heading">Account Information</h2>
+
+        <div class="profile-field">
+          <span class="profile-label">Display Name</span>
+          <p id="profile-name">Not available yet</p>
+        </div>
+
+        <div class="profile-field">
+          <span class="profile-label">Email Address</span>
+          <p id="profile-email">Not available yet</p>
+        </div>
+      </section>
+
+      <section class="profile-card" aria-labelledby="plan-heading">
+        <h2 id="plan-heading">My Subscription</h2>
+
+        <div class="profile-field">
+          <span class="profile-label">Current Plan</span>
+          <p id="profile-plan">Not available yet</p>
+        </div>
+
+        <div class="profile-field">
+          <span class="profile-label">Recipe Storage</span>
+          <p id="profile-recipe-count">— recipes saved</p>
+        </div>
+
+        <div class="recipe-usage">
+          <div class="usage-labels">
+            <span>Storage Usage</span>
+            <span id="profile-usage-text">— / — recipes</span>
+          </div>
+
+          <progress id="profile-usage-bar" value="0" max="100"></progress>
+        </div>
+
+        <p class="profile-note">
+          Subscription details and recipe limits will be connected to your account after backend
+          integration.
+        </p>
+      </section>
+
+      <div class="profile-actions">
+        <a href="dashboard.html" class="back-link"> &larr; Back to My Recipes </a>
+      </div>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>
