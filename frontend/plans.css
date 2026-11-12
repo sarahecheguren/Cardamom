@@ -1,0 +1,163 @@
+/* Introduction */
+.plans-intro {
+  max-width: 760px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+
+.plans-intro h1 {
+  margin-bottom: 16px;
+}
+
+.plans-intro p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 17px;
+}
+
+#plans-message {
+  margin-bottom: 32px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Subscription plan cards */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+.plan-card {
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+}
+
+.featured-plan {
+  border: 2px solid var(--green);
+  background: #f0f4eb;
+}
+
+.plan-header {
+  min-height: 150px;
+}
+
+.plan-header h2 {
+  margin: 8px 0 12px;
+  color: var(--green);
+  font-size: 32px;
+}
+
+.plan-header p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Recipe storage limits */
+.plan-capacity {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 24px 0;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.plan-capacity strong {
+  color: var(--green);
+  font-family: Georgia, serif;
+  font-size: 52px;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.plan-capacity span {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Plan features */
+.plan-features {
+  padding-left: 20px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.plan-features li {
+  padding: 7px 0;
+  font-size: 15px;
+}
+
+.plan-features li::marker {
+  color: var(--green);
+}
+
+/* Current subscription indicator */
+.plan-status {
+  margin-top: 26px;
+  padding: 12px 16px;
+  border-radius: 5px;
+  background: #dce8d7;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Additional information and navigation */
+.plans-note {
+  max-width: 700px;
+  margin: 36px auto;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.plans-actions {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.back-link {
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive layout */
+@media (max-width: 680px) {
+  .plans-intro {
+    text-align: left;
+  }
+
+  #plans-message {
+    text-align: left;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .plan-card {
+    padding: 26px 22px;
+  }
+
+  .plan-header {
+    min-height: auto;
+  }
+
+  .plan-capacity strong {
+    font-size: 44px;
+  }
+}
