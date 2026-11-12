@@ -1,0 +1,103 @@
+/* Link para voltar ao dashboard */
+.back-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Conteudo principal da receita */
+.recipe-details {
+  max-width: 900px;
+  padding: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+/* Nome e informacoes da receita */
+.recipe-details-header {
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.recipe-details-header h1 {
+  margin: 12px 0;
+  color: var(--ink);
+  font-size: 36px;
+}
+
+.demo-note {
+  margin-bottom: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.recipe-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recipe-info span {
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: white;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+/* Ingredientes, instrucoes e notas */
+.recipe-details-section {
+  padding: 30px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.recipe-details-section:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.recipe-details-section h2 {
+  margin-bottom: 18px;
+  color: var(--green);
+  font-size: 22px;
+}
+
+.recipe-details-section p {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.8;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Ajustes para telas menores */
+@media (max-width: 680px) {
+  .recipe-details {
+    padding: 24px 20px;
+  }
+
+  .recipe-details-header h1 {
+    font-size: 28px;
+  }
+
+  .recipe-info {
+    gap: 8px;
+  }
+
+  .recipe-info span {
+    font-size: 12px;
+  }
+
+  .recipe-details-section {
+    padding: 24px 0;
+  }
+}
