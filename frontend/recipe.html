@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recipe Details | Cardamom</title>
+
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="recipe.css" />
+    <script src="recipe.js" defer></script>
+  </head>
+
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="dashboard.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <a href="dashboard.html">My Recipes</a>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <a href="dashboard.html" class="back-link"> &larr; Back to My Recipes </a>
+
+      <article class="recipe-details">
+        <header class="recipe-details-header">
+          <p class="eyebrow">Your personal cookbook</p>
+
+          <h1 id="recipe-name">Loading recipe...</h1>
+
+          <p class="demo-note" id="recipe-message" role="status" aria-live="polite">
+            Waiting for recipe details...
+          </p>
+
+          <div class="recipe-info">
+            <span id="recipe-servings">Servings: —</span>
+            <span id="recipe-prep">Prep time: —</span>
+            <span id="recipe-cook">Cook time: —</span>
+          </div>
+        </header>
+
+        <section class="recipe-details-section">
+          <h2>Ingredients</h2>
+          <p id="recipe-ingredients"></p>
+        </section>
+
+        <section class="recipe-details-section">
+          <h2>Cooking Instructions</h2>
+          <p id="recipe-steps"></p>
+        </section>
+
+        <section class="recipe-details-section">
+          <h2>Additional Notes</h2>
+          <p id="recipe-notes"></p>
+        </section>
+      </article>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>
