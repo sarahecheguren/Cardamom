@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compare Plans | Cardamom</title>
+
+    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="plans.css" />
+    <script src="plans.js" defer></script>
+  </head>
+
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="index.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <a href="dashboard.html">My Recipes</a>
+        <span class="current-page">Compare Plans</span>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="plans-intro">
+        <p class="eyebrow">Your personal cookbook</p>
+        <h1>Find Your Perfect Plan</h1>
+        <p>
+          Whether you're saving a few family favorites or building a larger recipe collection,
+          Cardamom has a plan for you.
+        </p>
+      </section>
+
+      <p id="plans-message" role="status" aria-live="polite">
+        Compare our available recipe storage plans below.
+      </p>
+
+      <section class="plans-grid" aria-label="Subscription plans">
+        <article class="plan-card">
+          <div class="plan-header">
+            <p class="eyebrow">Getting started</p>
+            <h2>Free</h2>
+            <p>Keep your everyday favorites in one place.</p>
+          </div>
+
+          <div class="plan-capacity">
+            <strong>25</strong>
+            <span>saved recipes</span>
+          </div>
+
+          <ul class="plan-features">
+            <li>Create and save recipes</li>
+            <li>View your recipe collection</li>
+            <li>Read ingredients and cooking instructions</li>
+            <li>Store up to 25 recipes</li>
+          </ul>
+
+          <p id="free-status" class="plan-status" hidden>Your current plan</p>
+        </article>
+
+        <article class="plan-card featured-plan">
+          <div class="plan-header">
+            <p class="eyebrow">More room to cook</p>
+            <h2>Premium</h2>
+            <p>Build a much larger collection of recipes.</p>
+          </div>
+
+          <div class="plan-capacity">
+            <strong>500</strong>
+            <span>saved recipes</span>
+          </div>
+
+          <ul class="plan-features">
+            <li>Create and save recipes</li>
+            <li>View your recipe collection</li>
+            <li>Read ingredients and cooking instructions</li>
+            <li>Store up to 500 recipes</li>
+          </ul>
+
+          <p id="premium-status" class="plan-status" hidden>Your current plan</p>
+        </article>
+      </section>
+
+      <p class="plans-note">
+        Plan selection and account-specific information will be connected after backend integration.
+      </p>
+
+      <div class="plans-actions">
+        <a href="dashboard.html" class="back-link"> &larr; Back to My Recipes </a>
+      </div>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>
