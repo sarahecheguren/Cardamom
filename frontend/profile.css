@@ -1,0 +1,146 @@
+/* Profile page introduction */
+.profile-intro {
+  max-width: 720px;
+  margin-bottom: 32px;
+}
+
+.profile-intro h1 {
+  margin-bottom: 12px;
+}
+
+.profile-intro p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+/* Profile loading and error messages */
+#profile-message {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+#profile-message:empty {
+  display: none;
+}
+
+/* Profile information cards */
+.profile-card {
+  max-width: 850px;
+  margin-bottom: 24px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.profile-card h2 {
+  margin: 0 0 28px;
+  color: var(--green);
+  font-size: 22px;
+}
+
+.profile-field {
+  margin-bottom: 24px;
+}
+
+.profile-field:last-child {
+  margin-bottom: 0;
+}
+
+.profile-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.profile-field p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+/* Recipe storage information */
+.recipe-usage {
+  margin-top: 32px;
+}
+
+.usage-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+#profile-usage-bar {
+  display: block;
+  width: 100%;
+  height: 14px;
+  overflow: hidden;
+  border: none;
+  border-radius: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+#profile-usage-bar::-webkit-progress-bar {
+  background: #e4e9df;
+  border-radius: 8px;
+}
+
+#profile-usage-bar::-webkit-progress-value {
+  background: var(--green);
+  border-radius: 8px;
+}
+
+#profile-usage-bar::-moz-progress-bar {
+  background: var(--green);
+  border-radius: 8px;
+}
+
+.profile-note {
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Navigation back to the dashboard */
+.profile-actions {
+  margin-top: 28px;
+}
+
+.back-link {
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive layout for smaller screens */
+@media (max-width: 680px) {
+  .profile-card {
+    padding: 24px 20px;
+  }
+
+  .profile-card h2 {
+    font-size: 20px;
+  }
+
+  .usage-labels {
+    flex-wrap: wrap;
+  }
+
+  .profile-field p {
+    font-size: 16px;
+  }
+}
