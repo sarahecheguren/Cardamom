@@ -160,21 +160,76 @@ void RecipeController::asyncHandleHttpRequest(
 
     auto database = drogon::app().getDbClient("default");
 
+    // The plan limit is checked in the same statement as the insert, so the row
+    // is only written while the user is below it. Recipes the user owns and
+    // recipes they have favorited both count toward the limit.
     database->execSqlAsync(
         "INSERT INTO recipes "
         "(user_id, name, ingredient_list, steps, notes, "
         "servings, prep_minutes, cook_minutes) "
-        "VALUES (?, ?, ?, NULLIF(?, ''), NULLIF(?, ''), "
-        "NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''))",
-        [respond](const drogon::orm::Result& result) {
-            Json::Value body;
-            body["message"] = "Recipe saved.";
-            body["recipe"]["id"] = std::to_string(result.insertId());
-            respond(drogon::k201Created, body);
+        "SELECT u.id, ?, ?, NULLIF(?, ''), NULLIF(?, ''), "
+        "NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, '') "
+        "FROM users u "
+        "JOIN user_tiers t ON t.id = u.tier_id "
+        "WHERE u.id = ? "
+        "AND (SELECT COUNT(*) FROM recipes r WHERE r.user_id = u.id) + "
+        "(SELECT COUNT(*) FROM recipe_favorites f WHERE f.user_id = u.id) < t.recipe_limit",
+        [respond, reject, database, userId](const drogon::orm::Result& result) {
+            if (result.affectedRows() > 0) {
+                Json::Value body;
+                body["message"] = "Recipe saved.";
+                body["recipe"]["id"] = std::to_string(result.insertId());
+                respond(drogon::k201Created, body);
+                return;
+            }
+
+            // Nothing was inserted. Look up the plan to explain why.
+            database->execSqlAsync(
+                "SELECT t.tier_name, t.recipe_limit, "
+                "(SELECT b.tier_name FROM user_tiers b "
+                "WHERE b.recipe_limit > t.recipe_limit "
+                "ORDER BY b.recipe_limit ASC LIMIT 1) AS bigger_tier "
+                "FROM users u "
+                "JOIN user_tiers t ON t.id = u.tier_id "
+                "WHERE u.id = ?",
+                [respond, reject](const drogon::orm::Result& plan) {
+                    if (plan.empty()) {
+                        // The account was deleted while its session was still open.
+                        reject(drogon::k401Unauthorized, "You must log in to access recipes.");
+                        return;
+                    }
+
+                    const auto tierName = plan[0]["tier_name"].as<std::string>();
+                    const auto recipeLimit = plan[0]["recipe_limit"].as<unsigned int>();
+
+                    std::string message = "You have reached the " + tierName + " plan limit of " +
+                                          std::to_string(recipeLimit) + " recipes. ";
+
+                    if (plan[0]["bigger_tier"].isNull()) {
+                        message += "Delete a recipe to make room for a new one.";
+                    } else {
+                        message += plan[0]["bigger_tier"].as<std::string>() +
+                                   " offers more room, or you can delete a recipe to make room "
+                                   "for a new one.";
+                    }
+
+                    Json::Value body;
+                    body["error"] = message;
+                    body["limit_reached"] = true;
+                    body["tier_name"] = tierName;
+                    body["recipe_limit"] = recipeLimit;
+                    respond(drogon::k403Forbidden, body);
+                },
+                [reject](const drogon::orm::DrogonDbException&) {
+                    LOG_ERROR << "Recipe limit lookup failed";
+                    reject(drogon::k503ServiceUnavailable,
+                           "Unable to save the recipe. Please try again.");
+                },
+                userId);
         },
         [reject](const drogon::orm::DrogonDbException&) {
             LOG_ERROR << "Recipe insert failed";
             reject(drogon::k503ServiceUnavailable, "Unable to save the recipe. Please try again.");
         },
-        userId, name, ingredients, steps, notes, servings, prepMinutes, cookMinutes);
+        name, ingredients, steps, notes, servings, prepMinutes, cookMinutes, userId);
 }
