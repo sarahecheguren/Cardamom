@@ -364,9 +364,9 @@ DROGON_TEST(UpgradeMovesFreeUserToPremium) {
 
     // The change is stored in the database, not the session, so a fresh login sees it.
     const auto returning = newClient();
-    REQUIRE(hasStatus(
-        post(returning, "/api/auth/login", credentials(testEmail("upgrade"), kPassword)),
-        drogon::k200OK, "login again"));
+    REQUIRE(
+        hasStatus(post(returning, "/api/auth/login", credentials(testEmail("upgrade"), kPassword)),
+                  drogon::k200OK, "login again"));
     const auto later = get(returning, "/api/auth/me");
     REQUIRE(hasStatus(later, drogon::k200OK, "profile after login"));
     REQUIRE(later->getJsonObject());
