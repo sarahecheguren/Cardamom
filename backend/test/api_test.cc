@@ -288,6 +288,46 @@ DROGON_TEST(RegisterAndLogin) {
     CHECK(isError(get(newClient(), "/api/recipes"), drogon::k401Unauthorized, "other browser"));
 }
 
+DROGON_TEST(ProfileRequiresLogin) {
+    CHECK(isError(get(newClient(), "/api/auth/me"), drogon::k401Unauthorized, "profile"));
+}
+
+DROGON_TEST(ProfileShowsAccountTierAndRecipeCount) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto client = newClient();
+    const auto other = newClient();
+    REQUIRE(signIn(client, "profile"));
+    REQUIRE(signIn(other, "profile-other"));
+
+    const auto fresh = get(client, "/api/auth/me");
+    REQUIRE(hasStatus(fresh, drogon::k200OK, "new profile"));
+    REQUIRE(fresh->getJsonObject());
+    CHECK(fresh->getHeader("Cache-Control") == "no-store");
+
+    const auto& user = (*fresh->getJsonObject())["user"];
+    CHECK(!user["id"].asString().empty());
+    CHECK(user["display_name"].asString() == "profile");
+    CHECK(user["email"].asString() == testEmail("profile"));
+    // New accounts start on the Free tier.
+    CHECK(user["tier"].asString() == "Free");
+    CHECK(user["recipe_limit"].asUInt() == 25);
+    CHECK(user["recipe_count"].asUInt() == 0);
+    CHECK(!user.isMember("password_hash"));
+
+    REQUIRE(!saveRecipe(client, recipe("Soup", "Water")).empty());
+    REQUIRE(!saveRecipe(client, recipe("Toast", "Bread")).empty());
+    // Another user's recipes are not counted.
+    REQUIRE(!saveRecipe(other, recipe("Salad", "Lettuce")).empty());
+
+    const auto updated = get(client, "/api/auth/me");
+    REQUIRE(hasStatus(updated, drogon::k200OK, "profile with recipes"));
+    REQUIRE(updated->getJsonObject());
+    CHECK((*updated->getJsonObject())["user"]["recipe_count"].asUInt() == 2);
+}
+
 DROGON_TEST(RecipeCreateListAndView) {
     if (!testsupport::databaseAvailable()) {
         return;

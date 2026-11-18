@@ -58,28 +58,7 @@ int main() {
         },
         {drogon::Get});
 
-    drogon::app().registerHandler(
-        "/api/auth/me",
-        [](const drogon::HttpRequestPtr& req,
-           std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-            const auto userId = req->session()->get<std::string>("user_id");
-
-            Json::Value body;
-            auto status = drogon::k200OK;
-
-            if (userId.empty()) {
-                body["error"] = "You are not logged in.";
-                status = drogon::k401Unauthorized;
-            } else {
-                body["user"]["id"] = userId;
-            }
-
-            auto response = drogon::HttpResponse::newHttpJsonResponse(body);
-            response->setStatusCode(status);
-            response->addHeader("Cache-Control", "no-store");
-            callback(response);
-        },
-        {drogon::Get});
+    // GET /api/auth/me is handled by controllers/ProfileController.
 
     drogon::app().registerHandler(
         "/api/auth/logout",

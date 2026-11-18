@@ -103,12 +103,6 @@
   border-radius: 8px;
 }
 
-.profile-note {
-  margin-top: 22px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-}
 
 /* Navigation back to the dashboard */
 .profile-actions {

@@ -8,7 +8,9 @@ Currently working:
 - `GET /api/health` checks that the server is running.
 - `POST /api/auth/register` creates an account with the default Free tier.
 - `POST /api/auth/login` checks the email and password and starts a session.
-- `GET /api/auth/me` returns the user's ID if they are logged in.
+- `GET /api/auth/me` returns the logged-in user's profile: `id`,
+  `display_name`, `email`, `tier`, `recipe_limit`, and `recipe_count`
+  (all inside `user`). It returns 401 if they are not logged in.
 - `POST /api/auth/logout` clears the session.
 - `POST /api/recipes` saves a recipe for the logged-in user.
 - `GET /api/recipes` returns the logged-in user's recipes.
@@ -100,8 +102,8 @@ The tests are in backend/test:
 - `test_main.cc` tests password hashing and verification, and starts
   a copy of the backend on port 18080 for the API tests. Set TEST_PORT
   to use a different port.
-- `api_test.cc` sends real HTTP requests to the register, login, and
-  recipe endpoints. It checks input validation, the login requirement,
+- `api_test.cc` sends real HTTP requests to the register, login,
+  profile, and recipe endpoints. It checks input validation, the login requirement,
   saving, listing, and viewing recipes, and that users can't see each
   other's recipes.
 
@@ -119,5 +121,5 @@ To run one test, pass its name:
 
 ## Still to do
 
-Add the individual recipe view, profiles, and recipe-limit enforcement,
+Add the individual recipe view and recipe-limit enforcement,
 and finish the HTTPS setup. This is currently for local testing.
