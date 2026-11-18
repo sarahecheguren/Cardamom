@@ -20,6 +20,7 @@
       <nav aria-label="Main navigation">
         <a href="dashboard.html">My Recipes</a>
         <span class="current-page">Compare Plans</span>
+        <a href="profile.html">My Profile</a>
       </nav>
     </header>
 
@@ -80,12 +81,26 @@
           </ul>
 
           <p id="premium-status" class="plan-status" hidden>Your current plan</p>
+
+          <button id="upgrade-button" class="upgrade-button" type="button" hidden>
+            Upgrade to Premium
+          </button>
         </article>
       </section>
 
-      <p class="plans-note">
-        Plan selection and account-specific information will be connected after backend integration.
-      </p>
+      <dialog id="upgrade-dialog" aria-labelledby="upgrade-dialog-title">
+        <h2 id="upgrade-dialog-title">Upgrade to Premium?</h2>
+        <p>
+          Your recipe limit will go from 25 to 500 right away. This is a demo, so no payment is
+          taken.
+        </p>
+        <p id="upgrade-error" class="upgrade-error" role="alert" hidden></p>
+
+        <div class="dialog-actions">
+          <button id="upgrade-cancel" class="dialog-cancel" type="button">Not now</button>
+          <button id="upgrade-confirm" class="upgrade-button" type="button">Confirm upgrade</button>
+        </div>
+      </dialog>
 
       <div class="plans-actions">
         <a href="dashboard.html" class="back-link"> &larr; Back to My Recipes </a>

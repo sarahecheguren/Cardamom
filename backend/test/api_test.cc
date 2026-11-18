@@ -288,6 +288,11 @@ DROGON_TEST(RegisterAndLogin) {
     CHECK(isError(get(newClient(), "/api/recipes"), drogon::k401Unauthorized, "other browser"));
 }
 
+DROGON_TEST(UpgradeRequiresLogin) {
+    CHECK(isError(post(newClient(), "/api/account/upgrade", Json::Value(Json::objectValue)),
+                  drogon::k401Unauthorized, "upgrade"));
+}
+
 DROGON_TEST(ProfileRequiresLogin) {
     CHECK(isError(get(newClient(), "/api/auth/me"), drogon::k401Unauthorized, "profile"));
 }
@@ -326,6 +331,52 @@ DROGON_TEST(ProfileShowsAccountTierAndRecipeCount) {
     REQUIRE(hasStatus(updated, drogon::k200OK, "profile with recipes"));
     REQUIRE(updated->getJsonObject());
     CHECK((*updated->getJsonObject())["user"]["recipe_count"].asUInt() == 2);
+}
+
+DROGON_TEST(UpgradeMovesFreeUserToPremium) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const Json::Value empty(Json::objectValue);
+    const auto client = newClient();
+    const auto other = newClient();
+    REQUIRE(signIn(client, "upgrade"));
+    REQUIRE(signIn(other, "upgrade-other"));
+
+    const auto upgrade = post(client, "/api/account/upgrade", empty);
+    REQUIRE(hasStatus(upgrade, drogon::k200OK, "upgrade"));
+    REQUIRE(upgrade->getJsonObject());
+    CHECK(upgrade->getHeader("Cache-Control") == "no-store");
+    CHECK((*upgrade->getJsonObject())["user"]["tier"].asString() == "Premium");
+    CHECK((*upgrade->getJsonObject())["user"]["recipe_limit"].asUInt() == 500);
+
+    // The profile shows the new plan straight away.
+    const auto profile = get(client, "/api/auth/me");
+    REQUIRE(hasStatus(profile, drogon::k200OK, "profile after upgrade"));
+    REQUIRE(profile->getJsonObject());
+    CHECK((*profile->getJsonObject())["user"]["tier"].asString() == "Premium");
+    CHECK((*profile->getJsonObject())["user"]["recipe_limit"].asUInt() == 500);
+
+    // A Premium user cannot upgrade again.
+    CHECK(isError(post(client, "/api/account/upgrade", empty), drogon::k409Conflict,
+                  "second upgrade"));
+
+    // The change is stored in the database, not the session, so a fresh login sees it.
+    const auto returning = newClient();
+    REQUIRE(hasStatus(
+        post(returning, "/api/auth/login", credentials(testEmail("upgrade"), kPassword)),
+        drogon::k200OK, "login again"));
+    const auto later = get(returning, "/api/auth/me");
+    REQUIRE(hasStatus(later, drogon::k200OK, "profile after login"));
+    REQUIRE(later->getJsonObject());
+    CHECK((*later->getJsonObject())["user"]["tier"].asString() == "Premium");
+
+    // Only the user who upgraded changes tier.
+    const auto untouched = get(other, "/api/auth/me");
+    REQUIRE(hasStatus(untouched, drogon::k200OK, "other profile"));
+    REQUIRE(untouched->getJsonObject());
+    CHECK((*untouched->getJsonObject())["user"]["tier"].asString() == "Free");
 }
 
 DROGON_TEST(RecipeCreateListAndView) {

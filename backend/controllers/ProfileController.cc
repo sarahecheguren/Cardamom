@@ -5,23 +5,15 @@
 #include <cstdint>
 #include <string>
 
+#include "JsonResponder.h"
+
 void ProfileController::asyncHandleHttpRequest(
     const drogon::HttpRequestPtr& req,
     std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    auto respond = [callback](drogon::HttpStatusCode status, const Json::Value& body) {
-        auto response = drogon::HttpResponse::newHttpJsonResponse(body);
-        response->setStatusCode(status);
-        response->addHeader("Cache-Control", "no-store");
-        callback(response);
-    };
+    auto respond = api::jsonResponder(callback);
+    auto reject = api::errorResponder(respond);
 
-    auto reject = [respond](drogon::HttpStatusCode status, const std::string& message) {
-        Json::Value body;
-        body["error"] = message;
-        respond(status, body);
-    };
-
-    const auto userId = req->session()->get<std::string>("user_id");
+    const auto userId = api::sessionUserId(req);
 
     if (userId.empty()) {
         reject(drogon::k401Unauthorized, "You are not logged in.");

@@ -109,14 +109,69 @@
   text-align: center;
 }
 
-/* Additional information and navigation */
-.plans-note {
-  max-width: 700px;
-  margin: 36px auto;
-  color: var(--muted);
-  font-size: 14px;
-  text-align: center;
+/* Upgrade button and confirmation dialog */
+.upgrade-button {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 5px;
+  background: var(--green);
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
 }
+
+.plan-card .upgrade-button {
+  width: 100%;
+  margin-top: 26px;
+}
+
+.upgrade-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#upgrade-dialog {
+  max-width: 440px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--ink);
+}
+
+#upgrade-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#upgrade-dialog h2 {
+  margin: 0 0 12px;
+  color: var(--green);
+}
+
+.upgrade-error {
+  color: #a3271b;
+  font-size: 14px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dialog-cancel {
+  padding: 14px 24px;
+  border: 1px solid var(--green);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--green);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Navigation */
 
 .plans-actions {
   margin-top: 40px;

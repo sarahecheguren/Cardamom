@@ -12,6 +12,9 @@ Currently working:
   `display_name`, `email`, `tier`, `recipe_limit`, and `recipe_count`
   (all inside `user`). It returns 401 if they are not logged in.
 - `POST /api/auth/logout` clears the session.
+- `POST /api/account/upgrade` moves the logged-in Free user to Premium.
+  There is no payment step. It returns 409 if they are already on
+  Premium and 401 if they are not logged in.
 - `POST /api/recipes` saves a recipe for the logged-in user.
 - `GET /api/recipes` returns the logged-in user's recipes.
 
@@ -103,7 +106,7 @@ The tests are in backend/test:
   a copy of the backend on port 18080 for the API tests. Set TEST_PORT
   to use a different port.
 - `api_test.cc` sends real HTTP requests to the register, login,
-  profile, and recipe endpoints. It checks input validation, the login requirement,
+  profile, upgrade, and recipe endpoints. It checks input validation, the login requirement,
   saving, listing, and viewing recipes, and that users can't see each
   other's recipes.
 

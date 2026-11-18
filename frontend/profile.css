@@ -103,6 +103,17 @@
   border-radius: 8px;
 }
 
+/* Upgrade prompt, shown to Free users only */
+.profile-upgrade {
+  margin: 28px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.profile-upgrade a {
+  color: var(--green);
+  font-weight: bold;
+}
 
 /* Navigation back to the dashboard */
 .profile-actions {

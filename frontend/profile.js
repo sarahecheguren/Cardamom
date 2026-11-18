@@ -5,6 +5,7 @@ const profilePlan = document.querySelector('#profile-plan');
 const profileRecipeCount = document.querySelector('#profile-recipe-count');
 const profileUsageText = document.querySelector('#profile-usage-text');
 const profileUsageBar = document.querySelector('#profile-usage-bar');
+const profileUpgrade = document.querySelector('#profile-upgrade');
 
 async function loadProfile() {
   profileMessage.textContent = 'Checking your account...';
@@ -39,6 +40,9 @@ async function loadProfile() {
     if (typeof user.tier === 'string' && user.tier) {
       profilePlan.textContent = user.tier;
     }
+
+    // Only Free users are offered the upgrade.
+    profileUpgrade.hidden = user.tier !== 'Free';
 
     const count = user.recipe_count;
     const limit = user.recipe_limit;
