@@ -90,6 +90,15 @@ recipeForm.addEventListener('submit', async (event) => {
 
     if (!response.ok) {
       showMessage(body.error || 'Unable to save the recipe. Please try again.');
+
+      // The server refused the recipe because the plan is full.
+      if (body.limit_reached) {
+        const plansLink = document.createElement('a');
+        plansLink.href = 'plans.html';
+        plansLink.textContent = 'Compare plans';
+        message.append(' ', plansLink);
+      }
+
       return;
     }
 

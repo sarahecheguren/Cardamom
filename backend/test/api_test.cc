@@ -519,3 +519,81 @@ DROGON_TEST(RecipesArePrivateToTheirOwner) {
     CHECK(isError(get(alice, "/api/recipes/" + bobRecipe), drogon::k404NotFound, "Bob's recipe"));
     CHECK(isError(get(bob, "/api/recipes/" + aliceRecipe), drogon::k404NotFound, "Alice's recipe"));
 }
+
+DROGON_TEST(RecipeLimitIsEnforced) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto client = newClient();
+    const auto other = newClient();
+    REQUIRE(signIn(client, "limit"));
+    REQUIRE(signIn(other, "limit-other"));
+
+    // There is no API yet for deleting, favoriting, or changing plan, so those
+    // steps go straight to the database.
+    const auto database = drogon::app().getDbClient("default");
+    const std::string email = testEmail("limit");
+
+    const auto tiers = database->execSqlSync(
+        "SELECT (SELECT recipe_limit FROM user_tiers WHERE tier_name = 'Free') AS free_limit, "
+        "(SELECT id FROM user_tiers WHERE tier_name = 'Premium') AS premium_id");
+    const auto freeLimit = tiers[0]["free_limit"].as<unsigned int>();
+    const auto premiumId = tiers[0]["premium_id"].as<unsigned int>();
+
+    auto ownedCount = [&]() {
+        const auto listed = get(client, "/api/recipes");
+        return listed && listed->getJsonObject() ? (*listed->getJsonObject())["recipes"].size() : 0;
+    };
+
+    // A new account is on the Free plan and can save recipes up to its limit.
+    std::string lastId;
+    for (unsigned int i = 1; i <= freeLimit; ++i) {
+        lastId = saveRecipe(client, recipe("Recipe " + std::to_string(i), "Flour"));
+        REQUIRE(!lastId.empty());
+    }
+
+    // The next one is refused, and the message points to Premium.
+    const auto blocked = post(client, "/api/recipes", recipe("One too many", "Flour"));
+    REQUIRE(isError(blocked, drogon::k403Forbidden, "at the Free limit"));
+
+    const auto& blockedBody = *blocked->getJsonObject();
+    CHECK(blockedBody["limit_reached"].asBool());
+    CHECK(blockedBody["tier_name"].asString() == "Free");
+    CHECK(blockedBody["recipe_limit"].asUInt() == freeLimit);
+    CHECK(blockedBody["error"].asString().find("limit") != std::string::npos);
+    CHECK(blockedBody["error"].asString().find("Premium") != std::string::npos);
+    CHECK(ownedCount() == freeLimit);
+
+    // Another user's full collection does not block this one.
+    CHECK(!saveRecipe(other, recipe("Other's recipe", "Water")).empty());
+
+    // Deleting a recipe frees one place, and only one.
+    database->execSqlSync("DELETE FROM recipes WHERE id = ?", lastId);
+    CHECK(!saveRecipe(client, recipe("Replacement", "Flour")).empty());
+    CHECK(isError(post(client, "/api/recipes", recipe("One too many", "Flour")),
+                  drogon::k403Forbidden, "back at the limit"));
+
+    // A favorite takes a place just like an owned recipe.
+    const auto replacement = database->execSqlSync(
+        "SELECT r.id FROM recipes r JOIN users u ON u.id = r.user_id "
+        "WHERE u.email = ? AND r.name = 'Replacement'",
+        email);
+    REQUIRE(replacement.size() == 1);
+    database->execSqlSync("DELETE FROM recipes WHERE id = ?",
+                          replacement[0]["id"].as<std::string>());
+    database->execSqlSync(
+        "INSERT INTO recipe_favorites (user_id, recipe_id) "
+        "SELECT u.id, r.id FROM users u, recipes r "
+        "JOIN users o ON o.id = r.user_id "
+        "WHERE u.email = ? AND o.email = ?",
+        email, testEmail("limit-other"));
+    CHECK(isError(post(client, "/api/recipes", recipe("One too many", "Flour")),
+                  drogon::k403Forbidden, "favorite fills the last place"));
+    CHECK(ownedCount() == freeLimit - 1);
+
+    // On Premium the same request succeeds.
+    database->execSqlSync("UPDATE users SET tier_id = ? WHERE email = ?", premiumId, email);
+    CHECK(!saveRecipe(client, recipe("Room on Premium", "Flour")).empty());
+    CHECK(ownedCount() == freeLimit);
+}
