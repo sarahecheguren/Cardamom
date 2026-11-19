@@ -5,9 +5,10 @@ const profilePlan = document.querySelector('#profile-plan');
 const profileRecipeCount = document.querySelector('#profile-recipe-count');
 const profileUsageText = document.querySelector('#profile-usage-text');
 const profileUsageBar = document.querySelector('#profile-usage-bar');
+const profileUpgrade = document.querySelector('#profile-upgrade');
 
 async function loadProfile() {
-  profileMessage.textContent = 'Loading your account...';
+  profileMessage.textContent = 'Checking your account...';
 
   try {
     const response = await fetch('/api/auth/me', {
@@ -21,39 +22,40 @@ async function loadProfile() {
     }
 
     if (!response.ok) {
-      profileMessage.textContent = 'Unable to load your account. Please try again.';
+      profileMessage.textContent = 'Unable to check your account. Please try again.';
       return;
     }
 
     const data = await response.json();
-    const user = data.user;
+    const user = data.user || {};
 
-    if (
-      !user ||
-      typeof user.display_name !== 'string' ||
-      typeof user.email !== 'string' ||
-      typeof user.tier_name !== 'string' ||
-      !Number.isSafeInteger(user.recipe_count) ||
-      user.recipe_count < 0 ||
-      !Number.isSafeInteger(user.recipe_limit) ||
-      user.recipe_limit <= 0
-    ) {
-      profileMessage.textContent = 'The server returned invalid account information.';
-      return;
+    if (typeof user.display_name === 'string' && user.display_name) {
+      profileName.textContent = user.display_name;
     }
 
-    profileName.textContent = user.display_name;
-    profileEmail.textContent = user.email;
-    profilePlan.textContent = user.tier_name;
-    profileRecipeCount.textContent = `${user.recipe_count} recipes saved`;
-    profileUsageText.textContent = `${user.recipe_count} / ${user.recipe_limit} recipes`;
+    if (typeof user.email === 'string' && user.email) {
+      profileEmail.textContent = user.email;
+    }
 
-    profileUsageBar.max = user.recipe_limit;
-    profileUsageBar.value = Math.min(user.recipe_count, user.recipe_limit);
-    profileUsageBar.setAttribute(
-      'aria-label',
-      `${user.recipe_count} of ${user.recipe_limit} recipes used`
-    );
+    if (typeof user.tier === 'string' && user.tier) {
+      profilePlan.textContent = user.tier;
+    }
+
+    // Only Free users are offered the upgrade.
+    profileUpgrade.hidden = user.tier !== 'Free';
+
+    const count = user.recipe_count;
+    const limit = user.recipe_limit;
+
+    if (Number.isInteger(count)) {
+      profileRecipeCount.textContent = count + (count === 1 ? ' recipe saved' : ' recipes saved');
+    }
+
+    if (Number.isInteger(count) && Number.isInteger(limit) && limit > 0) {
+      profileUsageText.textContent = count + ' / ' + limit + ' recipes';
+      profileUsageBar.max = limit;
+      profileUsageBar.value = Math.min(count, limit);
+    }
 
     profileMessage.textContent = '';
   } catch (error) {

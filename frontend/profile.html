@@ -19,6 +19,7 @@
 
       <nav aria-label="Main navigation">
         <a href="dashboard.html">My Recipes</a>
+        <a href="plans.html">Compare Plans</a>
         <span class="current-page">My Profile</span>
       </nav>
     </header>
@@ -30,9 +31,7 @@
         <p>View your account information and recipe collection.</p>
       </section>
 
-      <p id="profile-message" role="status" aria-live="polite">
-        Loading your account information and recipe collection. This may take a few seconds.
-      </p>
+      <p id="profile-message" role="status" aria-live="polite">Checking your account...</p>
 
       <section class="profile-card" aria-labelledby="account-heading">
         <h2 id="account-heading">Account Information</h2>
@@ -70,9 +69,9 @@
           <progress id="profile-usage-bar" value="0" max="100"></progress>
         </div>
 
-        <p class="profile-note">
-          Your storage usage includes recipes you own and recipes you have favorited from other
-          users.
+        <p id="profile-upgrade" class="profile-upgrade" hidden>
+          Need more room? Premium stores up to 500 recipes.
+          <a href="plans.html">Upgrade to Premium</a>
         </p>
       </section>
 

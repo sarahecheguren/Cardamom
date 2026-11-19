@@ -103,11 +103,16 @@
   border-radius: 8px;
 }
 
-.profile-note {
-  margin-top: 22px;
+/* Upgrade prompt, shown to Free users only */
+.profile-upgrade {
+  margin: 28px 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 15px;
+}
+
+.profile-upgrade a {
+  color: var(--green);
+  font-weight: bold;
 }
 
 /* Navigation back to the dashboard */
