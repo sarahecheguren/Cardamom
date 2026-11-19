@@ -87,16 +87,35 @@ A successful request returns 201. Registering an existing email
 returns 409, and invalid information returns 400.
 Registration doesn't log the user in automatically.
 
-## Running the password tests
+## Running the tests
 
-After building:
+After building, with the database running and .env loaded as above:
 
 ```bash
 ./backend/build/test/backend_test
 ```
 
-The existing test checks a correct password, an incorrect password,
-an empty password, and an invalid hash.
+The tests are in backend/test:
+
+- `test_main.cc` tests password hashing and verification, and starts
+  a copy of the backend on port 18080 for the API tests. Set TEST_PORT
+  to use a different port.
+- `api_test.cc` sends real HTTP requests to the register, login, and
+  recipe endpoints. It checks input validation, the login requirement,
+  saving, listing, and viewing recipes, and that users can't see each
+  other's recipes.
+
+The API tests create accounts with emails that start with `apitest-`
+and delete them, along with their recipes, when the run ends.
+
+If the database isn't reachable, the tests that need it are skipped
+with a warning and the rest still run.
+
+To run one test, pass its name:
+
+```bash
+./backend/build/test/backend_test -r RecipesArePrivateToTheirOwner
+```
 
 ## Still to do
 
