@@ -124,5 +124,5 @@ To run one test, pass its name:
 
 ## Still to do
 
-Add the individual recipe view and recipe-limit enforcement,
+Add profiles, recipe editing and deletion, and plan upgrades,
 and finish the HTTPS setup. This is currently for local testing.
