@@ -78,3 +78,56 @@ void RecipeDetailsController::getRecipe(
         },
         recipeId, userId);
 }
+
+void RecipeDetailsController::deleteRecipe(
+    const drogon::HttpRequestPtr& req,
+    std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
+    auto respond = [callback](drogon::HttpStatusCode status, const Json::Value& body) {
+        auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+        response->setStatusCode(status);
+        response->addHeader("Cache-Control", "no-store");
+        callback(response);
+    };
+
+    auto reject = [respond](drogon::HttpStatusCode status, const char* message) {
+        Json::Value body;
+        body["error"] = message;
+        respond(status, body);
+    };
+
+    const auto userId = req->session()->get<std::string>("user_id");
+
+    if (userId.empty()) {
+        reject(drogon::k401Unauthorized, "You must log in to delete recipes.");
+        return;
+    }
+
+    std::uint32_t recipeId = 0;
+    const auto* end = id.data() + id.size();
+    const auto parsed = std::from_chars(id.data(), end, recipeId);
+
+    if (id.empty() || parsed.ec != std::errc{} || parsed.ptr != end || recipeId == 0 ||
+        id.front() == '0') {
+        reject(drogon::k400BadRequest, "Invalid recipe ID.");
+        return;
+    }
+
+    drogon::app().getDbClient("default")->execSqlAsync(
+        "DELETE FROM recipes WHERE id = ? AND user_id = ?",
+        [respond, reject](const drogon::orm::Result& result) {
+            if (result.affectedRows() == 0) {
+                reject(drogon::k404NotFound, "Recipe not found.");
+                return;
+            }
+
+            Json::Value body;
+            body["message"] = "Recipe deleted.";
+            respond(drogon::k200OK, body);
+        },
+        [reject](const drogon::orm::DrogonDbException&) {
+            LOG_ERROR << "Recipe deletion query failed";
+            reject(drogon::k503ServiceUnavailable,
+                   "Unable to delete this recipe. Please try again.");
+        },
+        recipeId, userId);
+}

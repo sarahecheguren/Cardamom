@@ -62,22 +62,61 @@ int main() {
         "/api/auth/me",
         [](const drogon::HttpRequestPtr& req,
            std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+            auto respond = [callback](drogon::HttpStatusCode status, const Json::Value& body) {
+                auto response = drogon::HttpResponse::newHttpJsonResponse(body);
+                response->setStatusCode(status);
+                response->addHeader("Cache-Control", "no-store");
+                callback(response);
+            };
+
             const auto userId = req->session()->get<std::string>("user_id");
 
-            Json::Value body;
-            auto status = drogon::k200OK;
-
             if (userId.empty()) {
+                Json::Value body;
                 body["error"] = "You are not logged in.";
-                status = drogon::k401Unauthorized;
-            } else {
-                body["user"]["id"] = userId;
+                respond(drogon::k401Unauthorized, body);
+                return;
             }
 
-            auto response = drogon::HttpResponse::newHttpJsonResponse(body);
-            response->setStatusCode(status);
-            response->addHeader("Cache-Control", "no-store");
-            callback(response);
+            drogon::app().getDbClient("default")->execSqlAsync(
+                "SELECT u.id, u.display_name, u.email, t.tier_name, t.recipe_limit, "
+                "(SELECT COUNT(*) FROM recipes r WHERE r.user_id = u.id) + "
+                "(SELECT COUNT(*) FROM recipe_favorites f WHERE f.user_id = u.id) "
+                "AS recipe_count "
+                "FROM users u JOIN user_tiers t ON t.id = u.tier_id "
+                "WHERE u.id = ? LIMIT 1",
+                [respond, req](const drogon::orm::Result& result) {
+                    Json::Value body;
+
+                    if (result.empty()) {
+                        req->session()->clear();
+                        req->session()->changeSessionIdToClient();
+                        body["error"] = "You are not logged in.";
+                        respond(drogon::k401Unauthorized, body);
+                        return;
+                    }
+
+                    const auto row = result[0];
+                    auto& user = body["user"];
+
+                    user["id"] = row["id"].as<std::string>();
+                    user["display_name"] = row["display_name"].as<std::string>();
+                    user["email"] = row["email"].as<std::string>();
+                    user["tier_name"] = row["tier_name"].as<std::string>();
+                    user["recipe_limit"] = row["recipe_limit"].as<unsigned int>();
+                    user["recipe_count"] =
+                        Json::UInt64(row["recipe_count"].as<unsigned long long>());
+
+                    respond(drogon::k200OK, body);
+                },
+                [respond](const drogon::orm::DrogonDbException&) {
+                    LOG_ERROR << "Profile database query failed";
+
+                    Json::Value body;
+                    body["error"] = "Unable to load your account. Please try again.";
+                    respond(drogon::k503ServiceUnavailable, body);
+                },
+                userId);
         },
         {drogon::Get});
 
