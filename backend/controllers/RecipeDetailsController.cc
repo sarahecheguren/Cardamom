@@ -39,6 +39,24 @@ bool parseRecipeId(const std::string& id, std::uint32_t& recipeId) {
     return parsed.ec == std::errc{} && parsed.ptr == end && recipeId != 0;
 }
 
+bool validateRecipeRequest(const drogon::HttpRequestPtr& req, const std::string& id,
+                           const RecipeResponse& respond, const char* loginMessage,
+                           std::string& userId, std::uint32_t& recipeId) {
+    userId = req->session()->get<std::string>("user_id");
+
+    if (userId.empty()) {
+        respond.reject(drogon::k401Unauthorized, loginMessage);
+        return false;
+    }
+
+    if (!parseRecipeId(id, recipeId)) {
+        respond.reject(drogon::k400BadRequest, "Invalid recipe ID.");
+        return false;
+    }
+
+    return true;
+}
+
 }  // namespace
 
 void RecipeDetailsController::getRecipe(
@@ -46,16 +64,10 @@ void RecipeDetailsController::getRecipe(
     std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
     const RecipeResponse respond(callback);
 
-    const auto userId = req->session()->get<std::string>("user_id");
-
-    if (userId.empty()) {
-        respond.reject(drogon::k401Unauthorized, "You must log in to access recipes.");
-        return;
-    }
-
+    std::string userId;
     std::uint32_t recipeId = 0;
-    if (!parseRecipeId(id, recipeId)) {
-        respond.reject(drogon::k400BadRequest, "Invalid recipe ID.");
+    if (!validateRecipeRequest(req, id, respond, "You must log in to access recipes.", userId,
+                               recipeId)) {
         return;
     }
 
@@ -107,16 +119,10 @@ void RecipeDetailsController::deleteRecipe(
     std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
     const RecipeResponse respond(callback);
 
-    const auto userId = req->session()->get<std::string>("user_id");
-
-    if (userId.empty()) {
-        respond.reject(drogon::k401Unauthorized, "You must log in to delete recipes.");
-        return;
-    }
-
+    std::string userId;
     std::uint32_t recipeId = 0;
-    if (!parseRecipeId(id, recipeId)) {
-        respond.reject(drogon::k400BadRequest, "Invalid recipe ID.");
+    if (!validateRecipeRequest(req, id, respond, "You must log in to delete recipes.", userId,
+                               recipeId)) {
         return;
     }
 
