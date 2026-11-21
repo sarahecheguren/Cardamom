@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "RecipeInput.h"
+
 void RecipeController::asyncHandleHttpRequest(
     const drogon::HttpRequestPtr& req,
     std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
@@ -66,95 +68,11 @@ void RecipeController::asyncHandleHttpRequest(
         return;
     }
 
-    const auto input = req->getJsonObject();
+    api::RecipeInput recipe;
+    std::string inputError;
 
-    if (!input || !input->isObject()) {
-        reject(drogon::k400BadRequest, "Please provide a JSON object.");
-        return;
-    }
-
-    auto trim = [](const std::string& value) {
-        const auto first = value.find_first_not_of(" \t\r\n");
-        if (first == std::string::npos) {
-            return std::string();
-        }
-
-        const auto last = value.find_last_not_of(" \t\r\n");
-        return value.substr(first, last - first + 1);
-    };
-
-    if (!(*input)["name"].isString() || !(*input)["ingredient_list"].isString()) {
-        reject(drogon::k400BadRequest, "Recipe name and ingredients are required.");
-        return;
-    }
-
-    const std::string name = trim((*input)["name"].asString());
-    const std::string ingredients = trim((*input)["ingredient_list"].asString());
-
-    if (name.empty() || name.size() > 200 || name.find('\0') != std::string::npos) {
-        reject(drogon::k400BadRequest, "Recipe name is required and must be at most 200 bytes.");
-        return;
-    }
-
-    if (ingredients.empty() || ingredients.size() > 65535 ||
-        ingredients.find('\0') != std::string::npos) {
-        reject(drogon::k400BadRequest, "Ingredients are required and must be at most 65535 bytes.");
-        return;
-    }
-
-    std::string steps;
-    std::string notes;
-
-    auto readOptionalText = [&](const char* field, std::string& value) {
-        const auto& item = (*input)[field];
-
-        if (item.isNull()) {
-            return true;
-        }
-
-        if (!item.isString()) {
-            return false;
-        }
-
-        value = trim(item.asString());
-        return value.size() <= 65535 && value.find('\0') == std::string::npos;
-    };
-
-    if (!readOptionalText("steps", steps) || !readOptionalText("notes", notes)) {
-        reject(drogon::k400BadRequest, "Steps and notes must be text of at most 65535 bytes each.");
-        return;
-    }
-
-    std::string servings;
-    std::string prepMinutes;
-    std::string cookMinutes;
-
-    auto readOptionalNumber = [&](const char* field, unsigned int minimum, std::string& value) {
-        const auto& item = (*input)[field];
-
-        if (item.isNull()) {
-            return true;
-        }
-
-        if (!item.isUInt()) {
-            return false;
-        }
-
-        const auto number = item.asUInt();
-        if (number < minimum || number > 65535) {
-            return false;
-        }
-
-        value = std::to_string(number);
-        return true;
-    };
-
-    if (!readOptionalNumber("servings", 1, servings) ||
-        !readOptionalNumber("prep_minutes", 0, prepMinutes) ||
-        !readOptionalNumber("cook_minutes", 0, cookMinutes)) {
-        reject(drogon::k400BadRequest,
-               "Servings must be an integer from 1 to 65535. "
-               "Preparation and cooking times must be integers from 0 to 65535.");
+    if (!api::readRecipeInput(req->getJsonObject(), recipe, inputError)) {
+        reject(drogon::k400BadRequest, inputError);
         return;
     }
 
@@ -231,5 +149,6 @@ void RecipeController::asyncHandleHttpRequest(
             LOG_ERROR << "Recipe insert failed";
             reject(drogon::k503ServiceUnavailable, "Unable to save the recipe. Please try again.");
         },
-        name, ingredients, steps, notes, servings, prepMinutes, cookMinutes, userId);
+        recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.servings,
+        recipe.prepMinutes, recipe.cookMinutes, userId);
 }

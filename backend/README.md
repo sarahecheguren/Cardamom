@@ -17,6 +17,9 @@ Currently working:
   Premium and 401 if they are not logged in.
 - `POST /api/recipes` saves a recipe for the logged-in user.
 - `GET /api/recipes` returns the logged-in user's recipes.
+- `PUT /api/recipes/{id}` replaces the fields of one of the logged-in
+  user's recipes. It follows the same rules as saving a new recipe and
+  returns 404 if the recipe doesn't exist or belongs to someone else.
 
 Passwords are stored as Argon2id hashes. Restarting the backend
 clears the login sessions.
@@ -107,8 +110,8 @@ The tests are in backend/test:
   to use a different port.
 - `api_test.cc` sends real HTTP requests to the register, login,
   profile, upgrade, and recipe endpoints. It checks input validation, the login requirement,
-  saving, listing, and viewing recipes, and that users can't see each
-  other's recipes.
+  saving, listing, viewing, and editing recipes, and that users can't see
+  or change each other's recipes.
 
 The API tests create accounts with emails that start with `apitest-`
 and delete them, along with their recipes, when the run ends.
@@ -124,5 +127,4 @@ To run one test, pass its name:
 
 ## Still to do
 
-Add profiles, recipe editing and deletion, and plan upgrades,
-and finish the HTTPS setup. This is currently for local testing.
+Add profile editing and recipe search, and finish the HTTPS setup. This is currently for local testing.

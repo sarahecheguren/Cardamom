@@ -5,6 +5,8 @@
 #include <charconv>
 #include <cstdint>
 
+#include "RecipeInput.h"
+
 namespace {
 
 class RecipeResponse {
@@ -112,6 +114,73 @@ void RecipeDetailsController::getRecipe(
                            "Unable to load this recipe. Please try again.");
         },
         recipeId, userId);
+}
+
+void RecipeDetailsController::updateRecipe(
+    const drogon::HttpRequestPtr& req,
+    std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
+    const RecipeResponse respond(callback);
+
+    std::string userId;
+    std::uint32_t recipeId = 0;
+    if (!validateRecipeRequest(req, id, respond, "You must log in to edit recipes.", userId,
+                               recipeId)) {
+        return;
+    }
+
+    // The same rules as adding a recipe.
+    api::RecipeInput recipe;
+    std::string inputError;
+
+    if (!api::readRecipeInput(req->getJsonObject(), recipe, inputError)) {
+        respond.reject(drogon::k400BadRequest, inputError.c_str());
+        return;
+    }
+
+    auto databaseError = [respond](const drogon::orm::DrogonDbException&) {
+        LOG_ERROR << "Recipe update query failed";
+        respond.reject(drogon::k503ServiceUnavailable,
+                       "Unable to save your changes. Please try again.");
+    };
+
+    auto updated = [respond, id]() {
+        Json::Value body;
+        body["message"] = "Recipe updated.";
+        body["recipe"]["id"] = id;
+        respond(drogon::k200OK, body);
+    };
+
+    auto database = drogon::app().getDbClient("default");
+
+    // The owner is part of the WHERE clause, so another user's recipe is never changed.
+    database->execSqlAsync(
+        "UPDATE recipes "
+        "SET name = ?, ingredient_list = ?, steps = NULLIF(?, ''), notes = NULLIF(?, ''), "
+        "servings = NULLIF(?, ''), prep_minutes = NULLIF(?, ''), cook_minutes = NULLIF(?, '') "
+        "WHERE id = ? AND user_id = ?",
+        [respond, updated, database, databaseError, recipeId,
+         userId](const drogon::orm::Result& result) {
+            if (result.affectedRows() > 0) {
+                updated();
+                return;
+            }
+
+            // MariaDB also reports no changed rows when the saved values equal the
+            // stored ones, so check whether the recipe exists before answering.
+            database->execSqlAsync(
+                "SELECT 1 FROM recipes WHERE id = ? AND user_id = ?",
+                [respond, updated](const drogon::orm::Result& existing) {
+                    if (existing.empty()) {
+                        respond.reject(drogon::k404NotFound, "Recipe not found.");
+                        return;
+                    }
+
+                    updated();
+                },
+                databaseError, recipeId, userId);
+        },
+        databaseError, recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.servings,
+        recipe.prepMinutes, recipe.cookMinutes, recipeId, userId);
 }
 
 void RecipeDetailsController::deleteRecipe(
