@@ -5,44 +5,78 @@
 #include <charconv>
 #include <cstdint>
 
-void RecipeDetailsController::getRecipe(
-    const drogon::HttpRequestPtr& req,
-    std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
-    auto respond = [callback](drogon::HttpStatusCode status, const Json::Value& body) {
+namespace {
+
+class RecipeResponse {
+  public:
+    explicit RecipeResponse(const std::function<void(const drogon::HttpResponsePtr&)>& callback)
+        : callback_(callback) {}
+
+    void operator()(drogon::HttpStatusCode status, const Json::Value& body) const {
         auto response = drogon::HttpResponse::newHttpJsonResponse(body);
         response->setStatusCode(status);
         response->addHeader("Cache-Control", "no-store");
-        callback(response);
-    };
-
-    auto reject = [respond](drogon::HttpStatusCode status, const char* message) {
-        Json::Value body;
-        body["error"] = message;
-        respond(status, body);
-    };
-
-    const auto userId = req->session()->get<std::string>("user_id");
-
-    if (userId.empty()) {
-        reject(drogon::k401Unauthorized, "You must log in to access recipes.");
-        return;
+        callback_(response);
     }
 
-    std::uint32_t recipeId = 0;
+    void reject(drogon::HttpStatusCode status, const char* message) const {
+        Json::Value body;
+        body["error"] = message;
+        (*this)(status, body);
+    }
+
+  private:
+    std::function<void(const drogon::HttpResponsePtr&)> callback_;
+};
+
+bool parseRecipeId(const std::string& id, std::uint32_t& recipeId) {
+    if (id.empty() || id.front() == '0') {
+        return false;
+    }
+
     const auto* end = id.data() + id.size();
     const auto parsed = std::from_chars(id.data(), end, recipeId);
+    return parsed.ec == std::errc{} && parsed.ptr == end && recipeId != 0;
+}
 
-    if (parsed.ec != std::errc{} || parsed.ptr != end || id.front() == '0') {
-        reject(drogon::k400BadRequest, "Invalid recipe ID.");
+bool validateRecipeRequest(const drogon::HttpRequestPtr& req, const std::string& id,
+                           const RecipeResponse& respond, const char* loginMessage,
+                           std::string& userId, std::uint32_t& recipeId) {
+    userId = req->session()->get<std::string>("user_id");
+
+    if (userId.empty()) {
+        respond.reject(drogon::k401Unauthorized, loginMessage);
+        return false;
+    }
+
+    if (!parseRecipeId(id, recipeId)) {
+        respond.reject(drogon::k400BadRequest, "Invalid recipe ID.");
+        return false;
+    }
+
+    return true;
+}
+
+}  // namespace
+
+void RecipeDetailsController::getRecipe(
+    const drogon::HttpRequestPtr& req,
+    std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
+    const RecipeResponse respond(callback);
+
+    std::string userId;
+    std::uint32_t recipeId = 0;
+    if (!validateRecipeRequest(req, id, respond, "You must log in to access recipes.", userId,
+                               recipeId)) {
         return;
     }
 
     drogon::app().getDbClient("default")->execSqlAsync(
         "SELECT id, name, ingredient_list, steps, notes, servings, prep_minutes, cook_minutes "
         "FROM recipes WHERE id = ? AND user_id = ?",
-        [respond, reject](const drogon::orm::Result& result) {
+        [respond](const drogon::orm::Result& result) {
             if (result.empty()) {
-                reject(drogon::k404NotFound, "Recipe not found.");
+                respond.reject(drogon::k404NotFound, "Recipe not found.");
                 return;
             }
 
@@ -72,9 +106,42 @@ void RecipeDetailsController::getRecipe(
 
             respond(drogon::k200OK, body);
         },
-        [reject](const drogon::orm::DrogonDbException&) {
+        [respond](const drogon::orm::DrogonDbException&) {
             LOG_ERROR << "Recipe details query failed";
-            reject(drogon::k503ServiceUnavailable, "Unable to load this recipe. Please try again.");
+            respond.reject(drogon::k503ServiceUnavailable,
+                           "Unable to load this recipe. Please try again.");
+        },
+        recipeId, userId);
+}
+
+void RecipeDetailsController::deleteRecipe(
+    const drogon::HttpRequestPtr& req,
+    std::function<void(const drogon::HttpResponsePtr&)>&& callback, std::string id) const {
+    const RecipeResponse respond(callback);
+
+    std::string userId;
+    std::uint32_t recipeId = 0;
+    if (!validateRecipeRequest(req, id, respond, "You must log in to delete recipes.", userId,
+                               recipeId)) {
+        return;
+    }
+
+    drogon::app().getDbClient("default")->execSqlAsync(
+        "DELETE FROM recipes WHERE id = ? AND user_id = ?",
+        [respond](const drogon::orm::Result& result) {
+            if (result.affectedRows() == 0) {
+                respond.reject(drogon::k404NotFound, "Recipe not found.");
+                return;
+            }
+
+            Json::Value body;
+            body["message"] = "Recipe deleted.";
+            respond(drogon::k200OK, body);
+        },
+        [respond](const drogon::orm::DrogonDbException&) {
+            LOG_ERROR << "Recipe deletion query failed";
+            respond.reject(drogon::k503ServiceUnavailable,
+                           "Unable to delete this recipe. Please try again.");
         },
         recipeId, userId);
 }

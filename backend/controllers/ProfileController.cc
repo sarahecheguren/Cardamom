@@ -24,7 +24,8 @@ void ProfileController::asyncHandleHttpRequest(
 
     database->execSqlAsync(
         "SELECT u.id, u.display_name, u.email, t.tier_name, t.recipe_limit, "
-        "(SELECT COUNT(*) FROM recipes r WHERE r.user_id = u.id) AS recipe_count "
+        "(SELECT COUNT(*) FROM recipes r WHERE r.user_id = u.id) + "
+        "(SELECT COUNT(*) FROM recipe_favorites f WHERE f.user_id = u.id) AS recipe_count "
         "FROM users u JOIN user_tiers t ON t.id = u.tier_id "
         "WHERE u.id = ? LIMIT 1",
         [respond, reject, req](const drogon::orm::Result& result) {
