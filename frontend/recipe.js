@@ -7,6 +7,7 @@ const recipeIngredients = document.querySelector('#recipe-ingredients');
 const recipeSteps = document.querySelector('#recipe-steps');
 const recipeNotes = document.querySelector('#recipe-notes');
 const deleteRecipeButton = document.querySelector('#delete-recipe-button');
+const editRecipeLink = document.querySelector('#edit-recipe-link');
 
 // Displays a message if something goes wrong
 function showError(message) {
@@ -36,6 +37,8 @@ function displayRecipe(recipe) {
   recipeMessage.textContent = '';
   document.title = `${recipe.name} | Cardamom`;
 
+  editRecipeLink.href = `add-recipe.html?id=${encodeURIComponent(recipe.id)}`;
+  editRecipeLink.hidden = false;
   deleteRecipeButton.hidden = false;
 }
 

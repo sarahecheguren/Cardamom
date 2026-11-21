@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "test_support.h"
@@ -41,6 +42,13 @@ HttpResponsePtr post(const HttpClientPtr& client, const std::string& path,
                      const Json::Value& body) {
     auto request = drogon::HttpRequest::newHttpJsonRequest(body);
     request->setMethod(drogon::Post);
+    request->setPath(path);
+    return send(client, request);
+}
+
+HttpResponsePtr put(const HttpClientPtr& client, const std::string& path, const Json::Value& body) {
+    auto request = drogon::HttpRequest::newHttpJsonRequest(body);
+    request->setMethod(drogon::Put);
     request->setPath(path);
     return send(client, request);
 }
@@ -238,6 +246,8 @@ DROGON_TEST(RecipesRequireLogin) {
     CHECK(isError(get(client, "/api/recipes/1"), drogon::k401Unauthorized, "view recipe"));
     // The login check comes first, so an invalid ID does not reveal anything either.
     CHECK(isError(get(client, "/api/recipes/abc"), drogon::k401Unauthorized, "view invalid ID"));
+    CHECK(isError(put(client, "/api/recipes/1", recipe("Soup", "Water")), drogon::k401Unauthorized,
+                  "edit recipe"));
 }
 
 // ---------------------------------------------------------------------------
@@ -611,6 +621,117 @@ DROGON_TEST(RecipesArePrivateToTheirOwner) {
     CHECK(isError(get(bob, "/api/recipes/" + aliceRecipe), drogon::k404NotFound, "Alice's recipe"));
 }
 
+DROGON_TEST(RecipeEdit) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto client = newClient();
+    const auto other = newClient();
+    REQUIRE(signIn(client, "edit"));
+    REQUIRE(signIn(other, "edit-other"));
+
+    Json::Value original = recipe("Apple pie", "Apples\nFlour");
+    original["steps"] = "Bake.";
+    original["notes"] = "Serve warm.";
+    original["servings"] = 8;
+    original["prep_minutes"] = 30;
+    original["cook_minutes"] = 60;
+    const std::string id = saveRecipe(client, original);
+    REQUIRE(!id.empty());
+    const std::string path = "/api/recipes/" + id;
+
+    auto stored = [&]() {
+        const auto response = get(client, path);
+        return response && response->getJsonObject() ? (*response->getJsonObject())["recipe"]
+                                                     : Json::Value();
+    };
+
+    // Every field can be changed. Text is trimmed, as it is when adding.
+    Json::Value changed = recipe("  Pear tart \n", "Pears\nFlour\nButter");
+    changed["steps"] = "Make the dough.\nBake.";
+    changed["notes"] = "Better cold.";
+    changed["servings"] = 6;
+    changed["prep_minutes"] = 0;
+    changed["cook_minutes"] = 45;
+
+    const auto update = put(client, path, changed);
+    REQUIRE(hasStatus(update, drogon::k200OK, "edit every field"));
+    REQUIRE(update->getJsonObject());
+    CHECK(update->getHeader("Cache-Control") == "no-store");
+    CHECK((*update->getJsonObject())["recipe"]["id"].asString() == id);
+
+    // The recipe view shows the new values straight away.
+    const auto tart = stored();
+    CHECK(tart["id"].asString() == id);
+    CHECK(tart["name"].asString() == "Pear tart");
+    CHECK(tart["ingredient_list"].asString() == "Pears\nFlour\nButter");
+    CHECK(tart["steps"].asString() == "Make the dough.\nBake.");
+    CHECK(tart["notes"].asString() == "Better cold.");
+    CHECK(tart["servings"].asUInt() == 6);
+    CHECK(tart["prep_minutes"].isUInt());
+    CHECK(tart["prep_minutes"].asUInt() == 0);
+    CHECK(tart["cook_minutes"].asUInt() == 45);
+
+    // So does the collection, which still holds one recipe.
+    const auto listed = get(client, "/api/recipes");
+    REQUIRE(hasStatus(listed, drogon::k200OK, "list after edit"));
+    REQUIRE(listed->getJsonObject());
+    const auto& recipes = (*listed->getJsonObject())["recipes"];
+    REQUIRE(recipes.size() == 1);
+    CHECK(recipes[0]["id"].asString() == id);
+    CHECK(recipes[0]["name"].asString() == "Pear tart");
+    CHECK(recipes[0]["cook_minutes"].asUInt() == 45);
+
+    // Saving without changing anything succeeds.
+    CHECK(hasStatus(put(client, path, changed), drogon::k200OK, "edit with no changes"));
+
+    // The required-field rules are the same as when adding, and a refused edit changes nothing.
+    Json::Value badNumber = recipe("Pear tart", "Pears");
+    badNumber["servings"] = 0;
+    const std::vector<std::pair<std::string, Json::Value>> invalid = {
+        {"missing name",
+         [] {
+             Json::Value body;
+             body["ingredient_list"] = "Pears";
+             return body;
+         }()},
+        {"blank name", recipe("   ", "Pears")},
+        {"blank ingredients", recipe("Pear tart", " \n ")},
+        {"long name", recipe(std::string(201, 'n'), "Pears")},
+        {"zero servings", badNumber},
+        {"not an object", Json::Value(Json::arrayValue)},
+    };
+    for (const auto& [label, body] : invalid) {
+        CHECK(isError(put(client, path, body), drogon::k400BadRequest, "edit with " + label));
+    }
+    CHECK(stored()["name"].asString() == "Pear tart");
+    CHECK(stored()["ingredient_list"].asString() == "Pears\nFlour\nButter");
+
+    // Another user cannot edit the recipe, and gets the same answer as for a missing one.
+    CHECK(isError(put(other, path, recipe("Stolen", "Nothing")), drogon::k404NotFound,
+                  "edit another user's recipe"));
+    CHECK(stored()["name"].asString() == "Pear tart");
+    CHECK(isError(put(client, "/api/recipes/4294967295", recipe("Ghost", "Nothing")),
+                  drogon::k404NotFound, "edit unknown recipe"));
+    CHECK(isError(put(client, "/api/recipes/abc", recipe("Ghost", "Nothing")),
+                  drogon::k400BadRequest, "edit invalid ID"));
+
+    // Optional fields that are left out or blank are cleared.
+    Json::Value minimal = recipe("Pear tart", "Pears");
+    minimal["steps"] = "  ";
+    minimal["servings"] = Json::Value();
+    CHECK(hasStatus(put(client, path, minimal), drogon::k200OK, "edit to required fields only"));
+
+    const auto cleared = stored();
+    CHECK(cleared["ingredient_list"].asString() == "Pears");
+    CHECK(cleared["steps"].isNull());
+    CHECK(cleared["notes"].isNull());
+    CHECK(cleared["servings"].isNull());
+    CHECK(cleared["prep_minutes"].isNull());
+    CHECK(cleared["cook_minutes"].isNull());
+}
+
 DROGON_TEST(RecipeLimitIsEnforced) {
     if (!testsupport::databaseAvailable()) {
         return;
@@ -621,16 +742,13 @@ DROGON_TEST(RecipeLimitIsEnforced) {
     REQUIRE(signIn(client, "limit"));
     REQUIRE(signIn(other, "limit-other"));
 
-    // There is no API yet for deleting, favoriting, or changing plan, so those
-    // steps go straight to the database.
+    // The delete and favorite steps go straight to the database.
     const auto database = drogon::app().getDbClient("default");
     const std::string email = testEmail("limit");
 
     const auto tiers = database->execSqlSync(
-        "SELECT (SELECT recipe_limit FROM user_tiers WHERE tier_name = 'Free') AS free_limit, "
-        "(SELECT id FROM user_tiers WHERE tier_name = 'Premium') AS premium_id");
+        "SELECT recipe_limit AS free_limit FROM user_tiers WHERE tier_name = 'Free'");
     const auto freeLimit = tiers[0]["free_limit"].as<unsigned int>();
-    const auto premiumId = tiers[0]["premium_id"].as<unsigned int>();
 
     auto ownedCount = [&]() {
         const auto listed = get(client, "/api/recipes");
@@ -683,8 +801,9 @@ DROGON_TEST(RecipeLimitIsEnforced) {
                   drogon::k403Forbidden, "favorite fills the last place"));
     CHECK(ownedCount() == freeLimit - 1);
 
-    // On Premium the same request succeeds.
-    database->execSqlSync("UPDATE users SET tier_id = ? WHERE email = ?", premiumId, email);
+    // A user blocked at the Free limit can save again right after upgrading.
+    REQUIRE(hasStatus(post(client, "/api/account/upgrade", Json::Value(Json::objectValue)),
+                      drogon::k200OK, "upgrade at the limit"));
     CHECK(!saveRecipe(client, recipe("Room on Premium", "Flour")).empty());
     CHECK(ownedCount() == freeLimit);
 }
