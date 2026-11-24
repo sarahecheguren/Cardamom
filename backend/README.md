@@ -20,6 +20,10 @@ Currently working:
 - `PUT /api/recipes/{id}` replaces the fields of one of the logged-in
   user's recipes. It follows the same rules as saving a new recipe and
   returns 404 if the recipe doesn't exist or belongs to someone else.
+- `PUT /api/auth/me` updates the signed-in user's `display_name` and `email`.
+  Changing the email also requires `current_password`. Display names may repeat,
+  but emails must be unique. Validation errors return `error` and `field`;
+  an incorrect password returns 403, and a duplicate email returns 409.
 
 Passwords are stored as Argon2id hashes. Restarting the backend
 clears the login sessions.

@@ -807,3 +807,130 @@ DROGON_TEST(RecipeLimitIsEnforced) {
     CHECK(!saveRecipe(client, recipe("Room on Premium", "Flour")).empty());
     CHECK(ownedCount() == freeLimit);
 }
+
+DROGON_TEST(ProfileUpdate) {
+    const std::string path = "/api/auth/me";
+    const auto client = newClient();
+    const auto other = newClient();
+
+    Json::Value input;
+    input["display_name"] = "Updated Cook";
+    input["email"] = testEmail("profile-edit");
+
+    CHECK(isError(put(client, path, input), drogon::k401Unauthorized,
+                  "profile update requires login"));
+
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    REQUIRE(signIn(client, "profile-edit"));
+    REQUIRE(signIn(other, "profile-edit-other"));
+
+    const auto originalEmail = testEmail("profile-edit");
+    const auto changedEmail = testEmail("profile-edit-new");
+
+    auto checkProfile = [&](const HttpClientPtr& account, const std::string& expectedName,
+                            const std::string& expectedEmail) {
+        const auto response = get(account, path);
+        REQUIRE(hasStatus(response, drogon::k200OK, "read profile"));
+        REQUIRE(response->getJsonObject());
+
+        const auto user = (*response->getJsonObject())["user"];
+        CHECK(user["display_name"].asString() == expectedName);
+        CHECK(user["email"].asString() == expectedEmail);
+        CHECK(user["tier"].asString() == "Free");
+        CHECK(user["recipe_limit"].asUInt() == 25);
+        CHECK(!user.isMember("password_hash"));
+    };
+
+    auto checkFieldError = [&](const Json::Value& body, HttpStatusCode status,
+                               const std::string& field) {
+        const auto response = put(client, path, body);
+        REQUIRE(isError(response, status, "profile field " + field));
+        REQUIRE(response->getJsonObject());
+        CHECK((*response->getJsonObject())["field"].asString() == field);
+    };
+
+    // Name changes do not require a password, and surrounding spaces are trimmed.
+    input["display_name"] = "  Updated Cook  ";
+    input["email"] = originalEmail;
+
+    const auto renamed = put(client, path, input);
+    REQUIRE(hasStatus(renamed, drogon::k200OK, "change display name"));
+    REQUIRE(renamed->getJsonObject());
+    CHECK(renamed->getHeader("Cache-Control") == "no-store");
+    CHECK((*renamed->getJsonObject())["user"]["display_name"].asString() == "Updated Cook");
+    checkProfile(client, "Updated Cook", originalEmail);
+
+    // Saving unchanged values must also succeed.
+    input["display_name"] = "Updated Cook";
+    CHECK(hasStatus(put(client, path, input), drogon::k200OK, "save unchanged account"));
+
+    // Display names may match another account's name.
+    input["display_name"] = "profile-edit-other";
+    REQUIRE(hasStatus(put(client, path, input), drogon::k200OK,
+                      "display names do not need to be unique"));
+
+    // Invalid fields are identified, and rejected requests change nothing.
+    const auto valid = input;
+    input["display_name"] = "   ";
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input.removeMember("display_name");
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input["display_name"] = std::string(101, 'n');
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input["email"] = " ";
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    input = valid;
+    input.removeMember("email");
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    input = valid;
+    input["email"] = "not-an-email";
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    checkProfile(client, "profile-edit-other", originalEmail);
+
+    // Email changes require the current password.
+    input = valid;
+    input["display_name"] = "Final Cook";
+    input["email"] = changedEmail;
+    checkFieldError(input, drogon::k400BadRequest, "current_password");
+
+    input["current_password"] = "wrong-password";
+    checkFieldError(input, drogon::k403Forbidden, "current_password");
+    checkProfile(client, "profile-edit-other", originalEmail);
+
+    // Another account's email is refused without partially saving the name.
+    input["current_password"] = kPassword;
+    input["email"] = testEmail("profile-edit-other");
+    checkFieldError(input, drogon::k409Conflict, "email");
+    checkProfile(client, "profile-edit-other", originalEmail);
+    checkProfile(other, "profile-edit-other", testEmail("profile-edit-other"));
+
+    // A valid email change updates only the signed-in account.
+    input["email"] = changedEmail;
+    REQUIRE(
+        hasStatus(put(client, path, input), drogon::k200OK, "change email with correct password"));
+    checkProfile(client, "Final Cook", changedEmail);
+    checkProfile(other, "profile-edit-other", testEmail("profile-edit-other"));
+
+    // A fresh login proves the new values are stored in the database.
+    // The test server does not register main.cc's logout handler, so use
+    // a separate client with no session cookies.
+    const auto returning = newClient();
+    CHECK(isError(post(returning, "/api/auth/login", credentials(originalEmail, kPassword)),
+                  drogon::k401Unauthorized, "old email no longer logs in"));
+
+    REQUIRE(hasStatus(post(returning, "/api/auth/login", credentials(changedEmail, kPassword)),
+                      drogon::k200OK, "login with updated email"));
+    checkProfile(returning, "Final Cook", changedEmail);
+}
