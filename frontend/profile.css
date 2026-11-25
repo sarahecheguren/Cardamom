@@ -63,6 +63,90 @@
   overflow-wrap: anywhere;
 }
 
+/* Formulario para editar a conta */
+#edit-profile-button {
+  margin-top: 8px;
+}
+
+#edit-profile-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: white;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+#edit-profile-form input:focus {
+  border-color: var(--green);
+}
+
+#edit-profile-form input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+#edit-profile-form input:disabled {
+  opacity: 0.6;
+}
+
+.profile-field .profile-error {
+  margin-top: 8px;
+  color: var(--error);
+  font-size: 13px;
+}
+
+.profile-error:empty {
+  display: none;
+}
+
+.profile-field .profile-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Botoes para salvar ou cancelar */
+.edit-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.cancel-edit-button {
+  padding: 12px 24px;
+  border: 1px solid var(--green);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cancel-edit-button:hover {
+  background: #e8eddf;
+}
+
+.cancel-edit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#edit-profile-message {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+#edit-profile-message:empty {
+  display: none;
+}
+
 /* Recipe storage information */
 .recipe-usage {
   margin-top: 32px;
@@ -147,5 +231,17 @@
 
   .profile-field p {
     font-size: 16px;
+  }
+
+  .edit-profile-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  #edit-profile-button,
+  #save-profile-button,
+  .cancel-edit-button {
+    width: 100%;
   }
 }
