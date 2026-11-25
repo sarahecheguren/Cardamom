@@ -28,7 +28,7 @@
       <section class="profile-intro">
         <p class="eyebrow">Your personal cookbook</p>
         <h1>My Profile</h1>
-        <p>View your account information and recipe collection.</p>
+        <p>View and manage your account information.</p>
       </section>
 
       <p id="profile-message" role="status" aria-live="polite">Checking your account...</p>
@@ -36,17 +36,87 @@
       <section class="profile-card" aria-labelledby="account-heading">
         <h2 id="account-heading">Account Information</h2>
 
-        <div class="profile-field">
-          <span class="profile-label">Display Name</span>
-          <p id="profile-name">Not available yet</p>
+        <!-- Informacoes atuais da conta -->
+        <div id="account-details">
+          <div class="profile-field">
+            <span class="profile-label">Display Name</span>
+            <p id="profile-name">Not available yet</p>
+          </div>
+
+          <div class="profile-field">
+            <span class="profile-label">Email Address</span>
+            <p id="profile-email">Not available yet</p>
+          </div>
+
+          <button id="edit-profile-button" class="add-button" type="button" disabled>
+            Edit Profile
+          </button>
         </div>
 
-        <div class="profile-field">
-          <span class="profile-label">Email Address</span>
-          <p id="profile-email">Not available yet</p>
-        </div>
+        <!-- Formulario para editar a conta -->
+        <form id="edit-profile-form" hidden>
+          <div class="profile-field">
+            <label class="profile-label" for="edit-display-name"> Display Name </label>
+
+            <input
+              id="edit-display-name"
+              name="display_name"
+              type="text"
+              maxlength="100"
+              autocomplete="name"
+              aria-describedby="display-name-error"
+              required
+            />
+
+            <p id="display-name-error" class="profile-error"></p>
+          </div>
+
+          <div class="profile-field">
+            <label class="profile-label" for="edit-email"> Email Address </label>
+
+            <input
+              id="edit-email"
+              name="email"
+              type="email"
+              maxlength="254"
+              autocomplete="email"
+              aria-describedby="edit-email-error"
+              required
+            />
+
+            <p id="edit-email-error" class="profile-error"></p>
+          </div>
+
+          <div id="password-confirmation" class="profile-field" hidden>
+            <label class="profile-label" for="current-password"> Current Password </label>
+
+            <input
+              id="current-password"
+              name="current_password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="1024"
+              aria-describedby="password-note current-password-error"
+            />
+
+            <p id="password-note" class="profile-note">
+              Confirm your password to change your email address.
+            </p>
+
+            <p id="current-password-error" class="profile-error"></p>
+          </div>
+
+          <div class="edit-profile-actions">
+            <button id="cancel-edit-button" class="cancel-edit-button" type="button">Cancel</button>
+
+            <button id="save-profile-button" class="add-button" type="submit">Save Changes</button>
+          </div>
+
+          <p id="edit-profile-message" role="status" aria-live="polite"></p>
+        </form>
       </section>
 
+      <!-- Informacoes da assinatura -->
       <section class="profile-card" aria-labelledby="plan-heading">
         <h2 id="plan-heading">My Subscription</h2>
 
