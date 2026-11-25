@@ -186,9 +186,16 @@ function validateForm() {
     return false;
   }
 
-  const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const emailParts = email.split('@');
+  const domain = emailParts[1] || '';
 
-  if (!emailPattern.test(email) || encoder.encode(email).length > 254) {
+  const validEmail =
+    emailParts.length === 2 &&
+    emailParts[0].length > 0 &&
+    domain.slice(1, -1).includes('.') &&
+    !/\s/.test(email);
+
+  if (!validEmail || encoder.encode(email).length > 254) {
     showFieldError('email', 'Please enter a valid email address.');
 
     emailInput.focus();
