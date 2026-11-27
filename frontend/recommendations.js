@@ -17,55 +17,6 @@
     return shuffled;
   }
 
-  // Cria o cartao de uma receita recomendada
-  function createCard(recipe) {
-    const card = document.createElement('a');
-    card.className = 'recipe-card recipe-card-link';
-    card.href = `recipe.html?id=${encodeURIComponent(recipe.id)}&source=discover`;
-
-    const image = document.createElement('div');
-    image.className = 'recipe-image';
-    image.textContent = recipe.name;
-
-    if (typeof recipe.image_url === 'string' && recipe.image_url.startsWith('https://')) {
-      const photo = document.createElement('img');
-      photo.className = 'recipe-card-photo';
-      photo.alt = '';
-      photo.loading = 'lazy';
-      photo.referrerPolicy = 'no-referrer';
-
-      photo.addEventListener('load', () => {
-        photo.classList.add('is-loaded');
-      });
-
-      photo.addEventListener('error', () => photo.remove());
-
-      image.append(photo);
-      photo.src = recipe.image_url;
-    }
-
-    const content = document.createElement('div');
-    content.className = 'recipe-content';
-
-    const title = document.createElement('h3');
-    title.textContent = recipe.name;
-
-    const author = document.createElement('p');
-    author.className = 'recipe-author';
-    author.textContent = `Shared by ${recipe.author}`;
-
-    const ingredients = document.createElement('p');
-    const ingredientText = recipe.ingredient_list || '';
-
-    ingredients.textContent =
-      ingredientText.length > 140 ? ingredientText.slice(0, 140) + '…' : ingredientText;
-
-    content.append(title, author, ingredients);
-    card.append(image, content);
-
-    return card;
-  }
-
   // Mostra ate tres receitas aleatorias
   function displayRecommendations() {
     grid.replaceChildren();
@@ -81,7 +32,7 @@
     const recommendations = shuffleRecipes(communityRecipes).slice(0, 3);
 
     recommendations.forEach((recipe) => {
-      grid.append(createCard(recipe));
+      grid.append(createSharedRecipeCard(recipe, { community: true }));
     });
 
     shuffleButton.disabled = communityRecipes.length <= 1;

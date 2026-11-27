@@ -30,7 +30,9 @@ function displayRecipe(recipe) {
 
   const photo = document.querySelector('#recipe-photo');
 
-  if (typeof recipe.image_url === 'string' && recipe.image_url.startsWith('https://')) {
+  const imageUrl = validateImageUrl(recipe.image_url);
+
+  if (imageUrl) {
     photo.alt = recipe.name;
 
     photo.addEventListener('load', () => {
@@ -41,7 +43,8 @@ function displayRecipe(recipe) {
       photo.hidden = true;
     });
 
-    photo.src = recipe.image_url;
+    photo.referrerPolicy = 'no-referrer';
+    photo.src = `https://${imageUrl.host}${imageUrl.pathname}${imageUrl.search}${imageUrl.hash}`;
   }
 
   recipeServings.textContent =
