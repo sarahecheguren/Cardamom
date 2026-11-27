@@ -428,3 +428,44 @@ body {
   font-size: 13px;
   font-weight: 600;
 }
+
+/* Recomendacoes da comunidade */
+.recommendations-section {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid #d8dfd3;
+}
+
+.recommendations-description {
+  color: #677667;
+  font-size: 14px;
+  margin: 8px 0 20px;
+}
+
+.shuffle-button {
+  padding: 9px 16px;
+  border: 1px solid #31583b;
+  border-radius: 8px;
+  background: transparent;
+  color: #31583b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.shuffle-button:hover:not(:disabled) {
+  background: #e1ebdd;
+}
+
+.shuffle-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.discover-link {
+  display: inline-block;
+  margin-top: 24px;
+  color: #31583b;
+  font-weight: 600;
+  font-size: 14px;
+}

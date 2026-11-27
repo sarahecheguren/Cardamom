@@ -6,6 +6,7 @@
     <title>My Recipes | Cardamom</title>
     <link rel="stylesheet" href="dashboard.css" />
     <script src="dashboard.js" defer></script>
+    <script src="recommendations.js" defer></script>
   </head>
   <body>
     <header class="dashboard-header">
@@ -54,6 +55,30 @@
         <p id="collection-message" role="status" aria-live="polite">Loading your recipes...</p>
 
         <div id="recipe-grid" class="recipe-grid"></div>
+      </section>
+
+      <section
+        class="recipes-section recommendations-section"
+        aria-labelledby="recommendations-heading"
+      >
+        <div class="section-heading">
+          <h2 id="recommendations-heading">Recommended for you</h2>
+          <button id="shuffle-recipes" class="shuffle-button" type="button" disabled>
+            Shuffle recipes
+          </button>
+        </div>
+
+        <p class="recommendations-description">
+          Discover something new from the Cardamom community.
+        </p>
+
+        <p id="recommendations-message" role="status" aria-live="polite">
+          Loading recommendations...
+        </p>
+
+        <div id="recommendations-grid" class="recipe-grid"></div>
+
+        <a href="discover.html" class="discover-link"> Explore all public recipes &rarr; </a>
       </section>
     </main>
 
