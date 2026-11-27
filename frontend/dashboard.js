@@ -32,6 +32,23 @@ function displayRecipes(recipes) {
     image.className = 'recipe-image';
     image.textContent = recipe.name;
 
+    if (typeof recipe.image_url === 'string' && recipe.image_url.startsWith('https://')) {
+      const photo = document.createElement('img');
+      photo.className = 'recipe-card-photo';
+      photo.alt = '';
+      photo.loading = 'lazy';
+      photo.referrerPolicy = 'no-referrer';
+
+      photo.addEventListener('load', () => {
+        photo.classList.add('is-loaded');
+      });
+
+      photo.addEventListener('error', () => photo.remove());
+
+      image.append(photo);
+      photo.src = recipe.image_url;
+    }
+
     const content = document.createElement('div');
     content.className = 'recipe-content';
 

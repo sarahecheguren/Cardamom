@@ -74,7 +74,8 @@ void RecipeDetailsController::getRecipe(
     }
 
     drogon::app().getDbClient("default")->execSqlAsync(
-        "SELECT id, name, ingredient_list, steps, notes, servings, prep_minutes, cook_minutes "
+        "SELECT id, name, ingredient_list, steps, notes, servings, prep_minutes, cook_minutes, "
+        "image_url "
         "FROM recipes WHERE id = ? AND user_id = ?",
         [respond](const drogon::orm::Result& result) {
             if (result.empty()) {
@@ -90,7 +91,7 @@ void RecipeDetailsController::getRecipe(
             recipe["name"] = row["name"].as<std::string>();
             recipe["ingredient_list"] = row["ingredient_list"].as<std::string>();
 
-            for (const char* field : {"steps", "notes"}) {
+            for (const char* field : {"steps", "notes", "image_url"}) {
                 if (row[field].isNull()) {
                     recipe[field] = Json::Value();
                 } else {
@@ -156,6 +157,7 @@ void RecipeDetailsController::updateRecipe(
     database->execSqlAsync(
         "UPDATE recipes "
         "SET name = ?, ingredient_list = ?, steps = NULLIF(?, ''), notes = NULLIF(?, ''), "
+        "image_url = NULLIF(?, ''), "
         "servings = NULLIF(?, ''), prep_minutes = NULLIF(?, ''), cook_minutes = NULLIF(?, '') "
         "WHERE id = ? AND user_id = ?",
         [respond, updated, database, databaseError, recipeId,
@@ -179,8 +181,8 @@ void RecipeDetailsController::updateRecipe(
                 },
                 databaseError, recipeId, userId);
         },
-        databaseError, recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.servings,
-        recipe.prepMinutes, recipe.cookMinutes, recipeId, userId);
+        databaseError, recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.imageUrl,
+        recipe.servings, recipe.prepMinutes, recipe.cookMinutes, recipeId, userId);
 }
 
 void RecipeDetailsController::deleteRecipe(

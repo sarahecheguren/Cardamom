@@ -67,6 +67,7 @@ async function loadRecipeForEdit() {
   fields.ingredient_list.value = recipe.ingredient_list ?? '';
   fields.steps.value = recipe.steps ?? '';
   fields.notes.value = recipe.notes ?? '';
+  fields.image_url.value = recipe.image_url ?? '';
   fields.servings.value = recipe.servings ?? '';
   fields.prep_minutes.value = recipe.prep_minutes ?? '';
   fields.cook_minutes.value = recipe.cook_minutes ?? '';
@@ -125,6 +126,7 @@ recipeForm.addEventListener('submit', async (event) => {
     ingredient_list: data.get('ingredient_list').trim(),
     steps: data.get('steps').trim(),
     notes: data.get('notes').trim(),
+    image_url: data.get('image_url').trim(),
     servings: optionalNumber('servings'),
     prep_minutes: optionalNumber('prep_minutes'),
     cook_minutes: optionalNumber('cook_minutes'),
@@ -133,6 +135,25 @@ recipeForm.addEventListener('submit', async (event) => {
   if (!recipe.name || !recipe.ingredient_list) {
     showMessage('Recipe name and ingredients are required.');
     return;
+  }
+
+  if (recipe.image_url) {
+    try {
+      const url = new URL(recipe.image_url);
+
+      if (
+        url.protocol !== 'https:' ||
+        url.username ||
+        url.password ||
+        new TextEncoder().encode(recipe.image_url).length > 2048
+      ) {
+        throw new Error('Invalid image URL');
+      }
+    } catch {
+      showMessage('Please enter a valid HTTPS image URL.');
+      document.querySelector('#image-url').focus();
+      return;
+    }
   }
 
   saving = true;

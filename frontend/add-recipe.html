@@ -40,6 +40,19 @@
           />
         </div>
 
+        <div class="form-field">
+          <label for="image-url">Recipe image (optional)</label>
+          <input
+            id="image-url"
+            name="image_url"
+            type="url"
+            placeholder="https://example.com/recipe.jpg"
+            maxlength="2048"
+            pattern="https://.+"
+          />
+          <small>Paste an HTTPS link to a photo of your finished recipe.</small>
+        </div>
+
         <div class="form-row">
           <div class="form-field">
             <label for="servings">Servings</label>

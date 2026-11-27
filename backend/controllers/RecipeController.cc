@@ -33,7 +33,7 @@ void RecipeController::asyncHandleHttpRequest(
         auto database = drogon::app().getDbClient("default");
 
         database->execSqlAsync(
-            "SELECT id, name, ingredient_list, servings, prep_minutes, cook_minutes "
+            "SELECT id, name, ingredient_list, servings, prep_minutes, cook_minutes, image_url "
             "FROM recipes WHERE user_id = ? ORDER BY name ASC, id ASC",
             [respond](const drogon::orm::Result& result) {
                 Json::Value body;
@@ -44,6 +44,9 @@ void RecipeController::asyncHandleHttpRequest(
                     recipe["id"] = row["id"].as<std::string>();
                     recipe["name"] = row["name"].as<std::string>();
                     recipe["ingredient_list"] = row["ingredient_list"].as<std::string>();
+                    recipe["image_url"] = row["image_url"].isNull()
+                                              ? Json::Value()
+                                              : Json::Value(row["image_url"].as<std::string>());
 
                     for (const char* field : {"servings", "prep_minutes", "cook_minutes"}) {
                         if (row[field].isNull()) {
@@ -83,9 +86,9 @@ void RecipeController::asyncHandleHttpRequest(
     // recipes they have favorited both count toward the limit.
     database->execSqlAsync(
         "INSERT INTO recipes "
-        "(user_id, name, ingredient_list, steps, notes, "
+        "(user_id, name, ingredient_list, steps, notes, image_url, "
         "servings, prep_minutes, cook_minutes) "
-        "SELECT u.id, ?, ?, NULLIF(?, ''), NULLIF(?, ''), "
+        "SELECT u.id, ?, ?, NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), "
         "NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, '') "
         "FROM users u "
         "JOIN user_tiers t ON t.id = u.tier_id "
@@ -149,6 +152,6 @@ void RecipeController::asyncHandleHttpRequest(
             LOG_ERROR << "Recipe insert failed";
             reject(drogon::k503ServiceUnavailable, "Unable to save the recipe. Please try again.");
         },
-        recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.servings,
-        recipe.prepMinutes, recipe.cookMinutes, userId);
+        recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.imageUrl,
+        recipe.servings, recipe.prepMinutes, recipe.cookMinutes, userId);
 }

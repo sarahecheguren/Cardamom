@@ -19,6 +19,22 @@ function showError(message) {
 function displayRecipe(recipe) {
   recipeName.textContent = recipe.name;
 
+  const photo = document.querySelector('#recipe-photo');
+
+  if (typeof recipe.image_url === 'string' && recipe.image_url.startsWith('https://')) {
+    photo.alt = recipe.name;
+
+    photo.addEventListener('load', () => {
+      photo.hidden = false;
+    });
+
+    photo.addEventListener('error', () => {
+      photo.hidden = true;
+    });
+
+    photo.src = recipe.image_url;
+  }
+
   recipeServings.textContent =
     recipe.servings == null ? 'Servings: —' : `Servings: ${recipe.servings}`;
 
