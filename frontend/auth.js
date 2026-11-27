@@ -104,6 +104,13 @@ form.addEventListener('submit', async (event) => {
         return;
       }
 
+      // Identifica uma conta que acabou de ser criada
+      try {
+        sessionStorage.setItem('cardamom_new_account', email.value.trim().toLowerCase());
+      } catch {
+        // Registration still works if browser storage is unavailable.
+      }
+
       form.reset();
       password.type = 'password';
       if (confirmation) confirmation.type = 'password';

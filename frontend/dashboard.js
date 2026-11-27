@@ -2,13 +2,22 @@ const logoutButton = document.querySelector('#logout-button');
 const recipeGrid = document.querySelector('#recipe-grid');
 const recipeCount = document.querySelector('#recipe-count');
 const collectionMessage = document.querySelector('#collection-message');
+const searchInput = document.querySelector('#recipe-search');
+
+let allRecipes = [];
 
 function displayRecipes(recipes) {
   recipeGrid.replaceChildren();
-  recipeCount.textContent = `${recipes.length} ${recipes.length === 1 ? 'recipe' : 'recipes'}`;
+  recipeCount.textContent =
+    recipes.length === allRecipes.length
+      ? `${recipes.length} ${recipes.length === 1 ? 'recipe' : 'recipes'}`
+      : `${recipes.length} of ${allRecipes.length} recipes`;
 
   if (recipes.length === 0) {
-    collectionMessage.textContent = 'Your collection is empty. Use + Add Recipe to get started.';
+    collectionMessage.textContent =
+      allRecipes.length === 0
+        ? 'Your collection is empty. Use + Add Recipe to get started.'
+        : 'No recipes match your search.';
     return;
   }
 
@@ -82,7 +91,9 @@ async function loadRecipes() {
       throw new Error('Invalid recipe collection response');
     }
 
-    displayRecipes(body.recipes);
+    allRecipes = body.recipes;
+    searchInput.disabled = false;
+    filterRecipes();
   } catch (error) {
     collectionMessage.textContent = 'Unable to load your recipes. Please reload the page.';
   }
@@ -110,4 +121,60 @@ logoutButton.addEventListener('click', async () => {
   }
 });
 
+// Personaliza a mensagem de boas-vindas
+async function loadWelcomeMessage() {
+  const heading = document.querySelector('#welcome-heading');
+  const description = document.querySelector('#welcome-description');
+
+  try {
+    const response = await fetch('/api/auth/me', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) return;
+
+    const { user } = await response.json();
+
+    if (!user?.display_name || !user?.email) return;
+
+    let isNewAccount = false;
+
+    try {
+      isNewAccount = sessionStorage.getItem('cardamom_new_account') === user.email.toLowerCase();
+
+      sessionStorage.removeItem('cardamom_new_account');
+    } catch {
+      // Use the returning-user greeting if storage is unavailable.
+    }
+
+    if (isNewAccount) {
+      heading.textContent = 'Welcome to Cardamom!';
+      description.textContent = 'Your culinary journey starts here.';
+    } else {
+      heading.textContent = `Welcome back, ${user.display_name}!`;
+      description.textContent = 'What are we cooking today?';
+    }
+  } catch {
+    // Keep the default greeting if the request fails.
+  }
+}
+
+// Filtra as receitas pelo nome ou ingredientes
+function filterRecipes() {
+  const search = searchInput.value.trim().toLowerCase();
+
+  const filteredRecipes = allRecipes.filter((recipe) => {
+    const name = (recipe.name || '').toLowerCase();
+    const ingredients = (recipe.ingredient_list || '').toLowerCase();
+
+    return name.includes(search) || ingredients.includes(search);
+  });
+
+  displayRecipes(filteredRecipes);
+}
+
+searchInput.addEventListener('input', filterRecipes);
+
+void loadWelcomeMessage();
 void loadRecipes();

@@ -26,8 +26,8 @@
       <section class="welcome-section">
         <div>
           <p class="eyebrow">Your personal cookbook</p>
-          <h1>My Recipes</h1>
-          <p>Keep all your favorite recipes in one place.</p>
+          <h1 id="welcome-heading">Welcome to Cardamom!</h1>
+          <p id="welcome-description">What are we cooking today?</p>
         </div>
 
         <a href="add-recipe.html" class="add-button">+ Add Recipe</a>
@@ -37,6 +37,17 @@
         <div class="section-heading">
           <h2 id="recipes-heading">Your collection</h2>
           <span id="recipe-count" class="demo-label"></span>
+        </div>
+
+        <div class="recipe-search">
+          <label for="recipe-search">Search your recipes</label>
+          <input
+            id="recipe-search"
+            type="search"
+            placeholder="Search by recipe name or ingredient..."
+            autocomplete="off"
+            disabled
+          />
         </div>
 
         <p id="collection-message" role="status" aria-live="polite">Loading your recipes...</p>
