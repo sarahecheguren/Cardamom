@@ -934,3 +934,117 @@ DROGON_TEST(ProfileUpdate) {
                       drogon::k200OK, "login with updated email"));
     checkProfile(returning, "Final Cook", changedEmail);
 }
+
+DROGON_TEST(DiscoverRequiresLogin) {
+    const auto client = newClient();
+
+    CHECK(
+        isError(get(client, "/api/discover"), drogon::k401Unauthorized, "discover without login"));
+
+    CHECK(isError(get(client, "/api/discover/1"), drogon::k401Unauthorized,
+                  "public recipe without login"));
+}
+
+DROGON_TEST(DiscoverVisibilityAndOwnership) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto owner = newClient();
+    const auto visitor = newClient();
+
+    REQUIRE(signIn(owner, "discover-owner"));
+    REQUIRE(signIn(visitor, "discover-visitor"));
+
+    // Cria uma receita privada e outra publica
+    Json::Value privateRecipe = recipe("Private soup", "Water");
+    Json::Value publicRecipe = recipe("Public pancakes", "Flour and milk");
+
+    publicRecipe["visibility"] = "public";
+    publicRecipe["image_url"] = "https://example.com/pancakes.jpg";
+
+    const std::string privateId = saveRecipe(owner, privateRecipe);
+    const std::string publicId = saveRecipe(owner, publicRecipe);
+
+    REQUIRE(!privateId.empty());
+    REQUIRE(!publicId.empty());
+
+    // Verifica se a receita privada fica fora do Discover
+    const auto listed = get(visitor, "/api/discover");
+
+    REQUIRE(hasStatus(listed, drogon::k200OK, "discover list"));
+    REQUIRE(listed->getJsonObject());
+
+    const auto& recipes = (*listed->getJsonObject())["recipes"];
+    REQUIRE(recipes.isArray());
+
+    bool foundPublic = false;
+    bool foundPrivate = false;
+
+    for (const auto& item : recipes) {
+        if (item["id"].asString() == publicId) {
+            foundPublic = true;
+            CHECK(item["author"].asString() == "discover-owner");
+            CHECK(item["visibility"].asString() == "public");
+            CHECK(item["image_url"].asString() == "https://example.com/pancakes.jpg");
+            CHECK(!item.isMember("email"));
+        }
+
+        if (item["id"].asString() == privateId) {
+            foundPrivate = true;
+        }
+    }
+
+    CHECK(foundPublic);
+    CHECK(!foundPrivate);
+
+    // Verifica o acesso direto as receitas
+    const auto details = get(visitor, "/api/discover/" + publicId);
+
+    REQUIRE(hasStatus(details, drogon::k200OK, "view public recipe"));
+    REQUIRE(details->getJsonObject());
+
+    CHECK((*details->getJsonObject())["recipe"]["name"].asString() == "Public pancakes");
+
+    CHECK(isError(get(visitor, "/api/discover/" + privateId), drogon::k404NotFound,
+                  "view private recipe"));
+
+    CHECK(isError(get(visitor, "/api/recipes/" + publicId), drogon::k404NotFound,
+                  "view another user's personal recipe"));
+
+    // Outro usuario nao pode editar ou deletar a receita
+    CHECK(
+        isError(put(visitor, "/api/recipes/" + publicId, recipe("Unauthorized change", "Nothing")),
+                drogon::k404NotFound, "unauthorized edit"));
+
+    auto deleteRequest = drogon::HttpRequest::newHttpRequest();
+    deleteRequest->setMethod(drogon::Delete);
+    deleteRequest->setPath("/api/recipes/" + publicId);
+
+    CHECK(isError(send(visitor, deleteRequest), drogon::k404NotFound, "unauthorized deletion"));
+
+    CHECK(hasStatus(get(owner, "/api/recipes/" + publicId), drogon::k200OK,
+                    "owner still has recipe"));
+
+    // Verifica os valores invalidos
+    Json::Value invalid = recipe("Invalid recipe", "Flour");
+
+    invalid["visibility"] = "friends";
+    CHECK(isError(post(owner, "/api/recipes", invalid), drogon::k400BadRequest,
+                  "invalid visibility"));
+
+    invalid["visibility"] = "public";
+    invalid["image_url"] = "http://example.com/photo.jpg";
+
+    CHECK(
+        isError(post(owner, "/api/recipes", invalid), drogon::k400BadRequest, "invalid image URL"));
+
+    // Uma receita que volta a ser privada deixa de ser acessivel
+    publicRecipe["visibility"] = "private";
+
+    REQUIRE(hasStatus(put(owner, "/api/recipes/" + publicId, publicRecipe), drogon::k200OK,
+                      "make recipe private"));
+
+    CHECK(isError(get(visitor, "/api/discover/" + publicId), drogon::k404NotFound,
+                  "recipe is now private"));
+}

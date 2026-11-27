@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Discover | Cardamom</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <script src="discover.js" defer></script>
+  </head>
+
+  <body>
+    <header class="dashboard-header">
+      <a class="brand" href="dashboard.html">
+        Cardamom
+        <span>your recipe notebook</span>
+      </a>
+
+      <nav aria-label="Main navigation">
+        <a href="dashboard.html">My Recipes</a>
+        <span class="current-page">Discover</span>
+        <a href="plans.html">Compare Plans</a>
+        <a href="profile.html">My Profile</a>
+        <button id="logout-button" type="button">Log out</button>
+      </nav>
+    </header>
+
+    <main class="dashboard-main">
+      <section class="welcome-section">
+        <div>
+          <p class="eyebrow">The Cardamom community</p>
+          <h1>Discover new recipes</h1>
+          <p>Find inspiration in recipes shared by other home cooks.</p>
+        </div>
+
+        <a href="add-recipe.html" class="add-button">+ Share a Recipe</a>
+      </section>
+
+      <section class="recipes-section" aria-labelledby="discover-heading">
+        <div class="section-heading">
+          <h2 id="discover-heading">Community recipes</h2>
+          <span id="recipe-count" class="demo-label"></span>
+        </div>
+
+        <div class="discover-search">
+          <label for="discover-search">Search public recipes</label>
+          <input
+            id="discover-search"
+            type="search"
+            placeholder="Search recipes, ingredients or authors..."
+          />
+        </div>
+
+        <p id="collection-message" role="status" aria-live="polite">Loading community recipes...</p>
+
+        <div id="recipe-grid" class="recipe-grid"></div>
+      </section>
+    </main>
+
+    <footer>Cardamom &middot; A place for the recipes you love.</footer>
+  </body>
+</html>

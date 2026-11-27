@@ -1,3 +1,12 @@
+const publicView = new URLSearchParams(window.location.search).get('source') === 'discover';
+
+if (publicView) {
+  const backLink = document.querySelector('.back-link');
+  backLink.href = 'discover.html';
+  backLink.textContent = '← Back to Discover';
+  document.querySelector('.recipe-details-header .eyebrow').textContent = 'The Cardamom community';
+}
+
 const recipeName = document.querySelector('#recipe-name');
 const recipeMessage = document.querySelector('#recipe-message');
 const recipeServings = document.querySelector('#recipe-servings');
@@ -50,12 +59,12 @@ function displayRecipe(recipe) {
 
   recipeNotes.textContent = recipe.notes || 'No additional notes.';
 
-  recipeMessage.textContent = '';
+  recipeMessage.textContent = publicView ? `Shared by ${recipe.author}` : '';
   document.title = `${recipe.name} | Cardamom`;
 
   editRecipeLink.href = `add-recipe.html?id=${encodeURIComponent(recipe.id)}`;
-  editRecipeLink.hidden = false;
-  deleteRecipeButton.hidden = false;
+  editRecipeLink.hidden = publicView;
+  deleteRecipeButton.hidden = publicView;
 }
 
 // Checks login and loads the selected recipe
@@ -87,7 +96,8 @@ async function loadRecipe() {
     }
 
     // Request the full recipe from the backend
-    const response = await fetch(`/api/recipes/${recipeId}`, {
+    const endpoint = publicView ? '/api/discover' : '/api/recipes';
+    const response = await fetch(`${endpoint}/${recipeId}`, {
       credentials: 'same-origin',
       cache: 'no-store',
     });
@@ -123,6 +133,7 @@ async function loadRecipe() {
 
 // Deletes the selected recipe after user confirmation
 async function deleteRecipe() {
+  if (publicView) return;
   const parameters = new URLSearchParams(window.location.search);
   const recipeId = parameters.get('id');
 

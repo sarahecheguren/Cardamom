@@ -18,6 +18,7 @@ struct RecipeInput {
     std::string steps;
     std::string notes;
     std::string imageUrl;
+    std::string visibility;
     std::string servings;
     std::string prepMinutes;
     std::string cookMinutes;
@@ -100,6 +101,18 @@ inline bool readRecipeInput(const std::shared_ptr<Json::Value>& input, RecipeInp
             error = "Please enter a valid HTTPS image URL.";
             return false;
         }
+    }
+
+    const auto& visibility = (*input)["visibility"];
+
+    if (!visibility.isNull()) {
+        if (!visibility.isString() ||
+            (visibility.asString() != "private" && visibility.asString() != "public")) {
+            error = "Recipe visibility must be private or public.";
+            return false;
+        }
+
+        recipe.visibility = visibility.asString();
     }
 
     auto readOptionalNumber = [&](const char* field, unsigned int minimum, std::string& value) {

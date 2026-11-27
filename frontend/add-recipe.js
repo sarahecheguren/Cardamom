@@ -68,6 +68,7 @@ async function loadRecipeForEdit() {
   fields.steps.value = recipe.steps ?? '';
   fields.notes.value = recipe.notes ?? '';
   fields.image_url.value = recipe.image_url ?? '';
+  fields.visibility.value = recipe.visibility === 'public' ? 'public' : 'private';
   fields.servings.value = recipe.servings ?? '';
   fields.prep_minutes.value = recipe.prep_minutes ?? '';
   fields.cook_minutes.value = recipe.cook_minutes ?? '';
@@ -127,6 +128,7 @@ recipeForm.addEventListener('submit', async (event) => {
     steps: data.get('steps').trim(),
     notes: data.get('notes').trim(),
     image_url: data.get('image_url').trim(),
+    visibility: data.get('visibility'),
     servings: optionalNumber('servings'),
     prep_minutes: optionalNumber('prep_minutes'),
     cook_minutes: optionalNumber('cook_minutes'),

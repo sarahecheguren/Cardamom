@@ -75,7 +75,7 @@ void RecipeDetailsController::getRecipe(
 
     drogon::app().getDbClient("default")->execSqlAsync(
         "SELECT id, name, ingredient_list, steps, notes, servings, prep_minutes, cook_minutes, "
-        "image_url "
+        "image_url, visibility "
         "FROM recipes WHERE id = ? AND user_id = ?",
         [respond](const drogon::orm::Result& result) {
             if (result.empty()) {
@@ -89,6 +89,7 @@ void RecipeDetailsController::getRecipe(
 
             recipe["id"] = row["id"].as<std::string>();
             recipe["name"] = row["name"].as<std::string>();
+            recipe["visibility"] = row["visibility"].as<std::string>();
             recipe["ingredient_list"] = row["ingredient_list"].as<std::string>();
 
             for (const char* field : {"steps", "notes", "image_url"}) {
@@ -158,7 +159,8 @@ void RecipeDetailsController::updateRecipe(
         "UPDATE recipes "
         "SET name = ?, ingredient_list = ?, steps = NULLIF(?, ''), notes = NULLIF(?, ''), "
         "image_url = NULLIF(?, ''), "
-        "servings = NULLIF(?, ''), prep_minutes = NULLIF(?, ''), cook_minutes = NULLIF(?, '') "
+        "servings = NULLIF(?, ''), prep_minutes = NULLIF(?, ''), cook_minutes = NULLIF(?, ''), "
+        "visibility = COALESCE(NULLIF(?, ''), visibility) "
         "WHERE id = ? AND user_id = ?",
         [respond, updated, database, databaseError, recipeId,
          userId](const drogon::orm::Result& result) {
@@ -182,7 +184,8 @@ void RecipeDetailsController::updateRecipe(
                 databaseError, recipeId, userId);
         },
         databaseError, recipe.name, recipe.ingredients, recipe.steps, recipe.notes, recipe.imageUrl,
-        recipe.servings, recipe.prepMinutes, recipe.cookMinutes, recipeId, userId);
+        recipe.servings, recipe.prepMinutes, recipe.cookMinutes, recipe.visibility, recipeId,
+        userId);
 }
 
 void RecipeDetailsController::deleteRecipe(
