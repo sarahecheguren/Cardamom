@@ -1,3 +1,11 @@
+/*
+ * University of Florida
+ * Cardamom Project
+ * By Gianluca Perrella (frontend contributions)
+ * CEN3031 Fall, 2026
+ * Defines the dashboard layout, navigation and recipe card styling.
+ */
+
 @import url('./styles.css');
 
 /* Layout principal do dashboard */
@@ -232,4 +240,286 @@ body {
   .section-heading h2 {
     font-size: 26px;
   }
+}
+
+/* Barra de pesquisa das receitas */
+.recipe-search {
+  margin-bottom: 28px;
+}
+
+.recipe-search label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.recipe-search input {
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+  color: var(--green);
+  font: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.recipe-search input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Melhorias visuais do dashboard */
+.welcome-section {
+  padding: 36px;
+  margin-bottom: 42px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(120deg, #e8eddf, #fffdf8);
+}
+
+.welcome-section > div {
+  min-width: 0;
+}
+
+.welcome-section h1 {
+  overflow-wrap: anywhere;
+}
+
+.add-button {
+  border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 73, 54, 0.18);
+}
+
+.recipe-card {
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(37, 73, 54, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 24px rgba(37, 73, 54, 0.14);
+}
+
+.recipe-image {
+  min-height: 200px;
+  overflow-wrap: anywhere;
+}
+
+.recipe-content h3 {
+  overflow-wrap: anywhere;
+}
+
+.recipe-time {
+  display: block;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.demo-label {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+#collection-message:not(:empty) {
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: #fffdf8;
+  color: var(--muted);
+  text-align: center;
+}
+
+#collection-message:empty {
+  display: none;
+}
+
+.recipe-search input {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(37, 73, 54, 0.04);
+}
+
+@media (max-width: 600px) {
+  .welcome-section {
+    padding: 24px;
+  }
+
+  .welcome-section h1 {
+    font-size: 32px;
+  }
+
+  .dashboard-header nav {
+    flex-wrap: wrap;
+  }
+
+  .section-heading {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recipe-card,
+  .add-button {
+    transition: none;
+  }
+
+  .recipe-card:hover,
+  .add-button:hover {
+    transform: none;
+  }
+}
+
+/* Fotografias das receitas */
+.recipe-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.recipe-card-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.recipe-card-photo.is-loaded {
+  opacity: 1;
+}
+
+/* Pagina da comunidade */
+.discover-search {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.discover-search label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.discover-search input {
+  width: 100%;
+  padding: 13px 16px;
+  font: inherit;
+  color: inherit;
+  background: white;
+  border: 1px solid #cbd5c7;
+  border-radius: 10px;
+}
+
+.discover-search input:focus {
+  outline: 2px solid #64866a;
+  outline-offset: 2px;
+}
+
+.recipe-content .recipe-author {
+  color: #64866a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Recomendacoes da comunidade */
+.recommendations-section {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid #d8dfd3;
+}
+
+.recommendations-description {
+  color: #677667;
+  font-size: 14px;
+  margin: 8px 0 20px;
+}
+
+.shuffle-button {
+  padding: 9px 16px;
+  border: 1px solid #31583b;
+  border-radius: 8px;
+  background: transparent;
+  color: #31583b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.shuffle-button:hover:not(:disabled) {
+  background: #e1ebdd;
+}
+
+.shuffle-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.discover-link {
+  display: inline-block;
+  margin-top: 24px;
+  color: #31583b;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Colecao de receitas favoritas */
+.favorites-section {
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid #d8dfd3;
+}
+
+.favorite-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.favorite-card .recipe-card-link {
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.favorite-card-actions {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid #e2e7de;
+}
+
+.remove-favorite-button {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d9dfd3;
+  border-radius: 7px;
+  background: transparent;
+  color: #a34b4b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.remove-favorite-button:hover:not(:disabled) {
+  background: #f5e8e8;
+}
+
+.remove-favorite-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

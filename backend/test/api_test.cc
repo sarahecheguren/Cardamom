@@ -807,3 +807,386 @@ DROGON_TEST(RecipeLimitIsEnforced) {
     CHECK(!saveRecipe(client, recipe("Room on Premium", "Flour")).empty());
     CHECK(ownedCount() == freeLimit);
 }
+
+DROGON_TEST(ProfileUpdate) {
+    const std::string path = "/api/auth/me";
+    const auto client = newClient();
+    const auto other = newClient();
+
+    Json::Value input;
+    input["display_name"] = "Updated Cook";
+    input["email"] = testEmail("profile-edit");
+
+    CHECK(isError(put(client, path, input), drogon::k401Unauthorized,
+                  "profile update requires login"));
+
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    REQUIRE(signIn(client, "profile-edit"));
+    REQUIRE(signIn(other, "profile-edit-other"));
+
+    const auto originalEmail = testEmail("profile-edit");
+    const auto changedEmail = testEmail("profile-edit-new");
+
+    auto checkProfile = [&](const HttpClientPtr& account, const std::string& expectedName,
+                            const std::string& expectedEmail) {
+        const auto response = get(account, path);
+        REQUIRE(hasStatus(response, drogon::k200OK, "read profile"));
+        REQUIRE(response->getJsonObject());
+
+        const auto user = (*response->getJsonObject())["user"];
+        CHECK(user["display_name"].asString() == expectedName);
+        CHECK(user["email"].asString() == expectedEmail);
+        CHECK(user["tier"].asString() == "Free");
+        CHECK(user["recipe_limit"].asUInt() == 25);
+        CHECK(!user.isMember("password_hash"));
+    };
+
+    auto checkFieldError = [&](const Json::Value& body, HttpStatusCode status,
+                               const std::string& field) {
+        const auto response = put(client, path, body);
+        REQUIRE(isError(response, status, "profile field " + field));
+        REQUIRE(response->getJsonObject());
+        CHECK((*response->getJsonObject())["field"].asString() == field);
+    };
+
+    // Name changes do not require a password, and surrounding spaces are trimmed.
+    input["display_name"] = "  Updated Cook  ";
+    input["email"] = originalEmail;
+
+    const auto renamed = put(client, path, input);
+    REQUIRE(hasStatus(renamed, drogon::k200OK, "change display name"));
+    REQUIRE(renamed->getJsonObject());
+    CHECK(renamed->getHeader("Cache-Control") == "no-store");
+    CHECK((*renamed->getJsonObject())["user"]["display_name"].asString() == "Updated Cook");
+    checkProfile(client, "Updated Cook", originalEmail);
+
+    // Saving unchanged values must also succeed.
+    input["display_name"] = "Updated Cook";
+    CHECK(hasStatus(put(client, path, input), drogon::k200OK, "save unchanged account"));
+
+    // Display names may match another account's name.
+    input["display_name"] = "profile-edit-other";
+    REQUIRE(hasStatus(put(client, path, input), drogon::k200OK,
+                      "display names do not need to be unique"));
+
+    // Invalid fields are identified, and rejected requests change nothing.
+    const auto valid = input;
+    input["display_name"] = "   ";
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input.removeMember("display_name");
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input["display_name"] = std::string(101, 'n');
+    checkFieldError(input, drogon::k400BadRequest, "display_name");
+
+    input = valid;
+    input["email"] = " ";
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    input = valid;
+    input.removeMember("email");
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    input = valid;
+    input["email"] = "not-an-email";
+    checkFieldError(input, drogon::k400BadRequest, "email");
+
+    checkProfile(client, "profile-edit-other", originalEmail);
+
+    // Email changes require the current password.
+    input = valid;
+    input["display_name"] = "Final Cook";
+    input["email"] = changedEmail;
+    checkFieldError(input, drogon::k400BadRequest, "current_password");
+
+    input["current_password"] = "wrong-password";
+    checkFieldError(input, drogon::k403Forbidden, "current_password");
+    checkProfile(client, "profile-edit-other", originalEmail);
+
+    // Another account's email is refused without partially saving the name.
+    input["current_password"] = kPassword;
+    input["email"] = testEmail("profile-edit-other");
+    checkFieldError(input, drogon::k409Conflict, "email");
+    checkProfile(client, "profile-edit-other", originalEmail);
+    checkProfile(other, "profile-edit-other", testEmail("profile-edit-other"));
+
+    // A valid email change updates only the signed-in account.
+    input["email"] = changedEmail;
+    REQUIRE(
+        hasStatus(put(client, path, input), drogon::k200OK, "change email with correct password"));
+    checkProfile(client, "Final Cook", changedEmail);
+    checkProfile(other, "profile-edit-other", testEmail("profile-edit-other"));
+
+    // A fresh login proves the new values are stored in the database.
+    // The test server does not register main.cc's logout handler, so use
+    // a separate client with no session cookies.
+    const auto returning = newClient();
+    CHECK(isError(post(returning, "/api/auth/login", credentials(originalEmail, kPassword)),
+                  drogon::k401Unauthorized, "old email no longer logs in"));
+
+    REQUIRE(hasStatus(post(returning, "/api/auth/login", credentials(changedEmail, kPassword)),
+                      drogon::k200OK, "login with updated email"));
+    checkProfile(returning, "Final Cook", changedEmail);
+}
+
+DROGON_TEST(DiscoverRequiresLogin) {
+    const auto client = newClient();
+
+    CHECK(
+        isError(get(client, "/api/discover"), drogon::k401Unauthorized, "discover without login"));
+
+    CHECK(isError(get(client, "/api/discover/1"), drogon::k401Unauthorized,
+                  "public recipe without login"));
+}
+
+DROGON_TEST(DiscoverVisibilityAndOwnership) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto owner = newClient();
+    const auto visitor = newClient();
+
+    REQUIRE(signIn(owner, "discover-owner"));
+    REQUIRE(signIn(visitor, "discover-visitor"));
+
+    // Cria uma receita privada e outra publica
+    Json::Value privateRecipe = recipe("Private soup", "Water");
+    Json::Value publicRecipe = recipe("Public pancakes", "Flour and milk");
+
+    publicRecipe["visibility"] = "public";
+    publicRecipe["image_url"] = "https://example.com/pancakes.jpg";
+
+    const std::string privateId = saveRecipe(owner, privateRecipe);
+    const std::string publicId = saveRecipe(owner, publicRecipe);
+
+    REQUIRE(!privateId.empty());
+    REQUIRE(!publicId.empty());
+
+    // Verifica se a receita privada fica fora do Discover
+    const auto listed = get(visitor, "/api/discover");
+
+    REQUIRE(hasStatus(listed, drogon::k200OK, "discover list"));
+    REQUIRE(listed->getJsonObject());
+
+    const auto& recipes = (*listed->getJsonObject())["recipes"];
+    REQUIRE(recipes.isArray());
+
+    bool foundPublic = false;
+    bool foundPrivate = false;
+
+    for (const auto& item : recipes) {
+        if (item["id"].asString() == publicId) {
+            foundPublic = true;
+            CHECK(item["author"].asString() == "discover-owner");
+            CHECK(item["visibility"].asString() == "public");
+            CHECK(item["image_url"].asString() == "https://example.com/pancakes.jpg");
+            CHECK(!item.isMember("email"));
+        }
+
+        if (item["id"].asString() == privateId) {
+            foundPrivate = true;
+        }
+    }
+
+    CHECK(foundPublic);
+    CHECK(!foundPrivate);
+
+    // Verifica o acesso direto as receitas
+    const auto details = get(visitor, "/api/discover/" + publicId);
+
+    REQUIRE(hasStatus(details, drogon::k200OK, "view public recipe"));
+    REQUIRE(details->getJsonObject());
+
+    CHECK((*details->getJsonObject())["recipe"]["name"].asString() == "Public pancakes");
+
+    CHECK(isError(get(visitor, "/api/discover/" + privateId), drogon::k404NotFound,
+                  "view private recipe"));
+
+    CHECK(isError(get(visitor, "/api/recipes/" + publicId), drogon::k404NotFound,
+                  "view another user's personal recipe"));
+
+    // Outro usuario nao pode editar ou deletar a receita
+    CHECK(
+        isError(put(visitor, "/api/recipes/" + publicId, recipe("Unauthorized change", "Nothing")),
+                drogon::k404NotFound, "unauthorized edit"));
+
+    auto deleteRequest = drogon::HttpRequest::newHttpRequest();
+    deleteRequest->setMethod(drogon::Delete);
+    deleteRequest->setPath("/api/recipes/" + publicId);
+
+    CHECK(isError(send(visitor, deleteRequest), drogon::k404NotFound, "unauthorized deletion"));
+
+    CHECK(hasStatus(get(owner, "/api/recipes/" + publicId), drogon::k200OK,
+                    "owner still has recipe"));
+
+    // Verifica os valores invalidos
+    Json::Value invalid = recipe("Invalid recipe", "Flour");
+
+    invalid["visibility"] = "friends";
+    CHECK(isError(post(owner, "/api/recipes", invalid), drogon::k400BadRequest,
+                  "invalid visibility"));
+
+    invalid["visibility"] = "public";
+    invalid["image_url"] = "http://example.com/photo.jpg";
+
+    CHECK(
+        isError(post(owner, "/api/recipes", invalid), drogon::k400BadRequest, "invalid image URL"));
+
+    // Uma receita que volta a ser privada deixa de ser acessivel
+    publicRecipe["visibility"] = "private";
+
+    REQUIRE(hasStatus(put(owner, "/api/recipes/" + publicId, publicRecipe), drogon::k200OK,
+                      "make recipe private"));
+
+    CHECK(isError(get(visitor, "/api/discover/" + publicId), drogon::k404NotFound,
+                  "recipe is now private"));
+}
+
+DROGON_TEST(FavoritesRequireLogin) {
+    const auto client = newClient();
+
+    CHECK(isError(get(client, "/api/favorites"), drogon::k401Unauthorized,
+                  "list favorites without login"));
+
+    CHECK(isError(post(client, "/api/favorites/1", Json::Value(Json::objectValue)),
+                  drogon::k401Unauthorized, "save without login"));
+
+    auto request = drogon::HttpRequest::newHttpRequest();
+    request->setMethod(drogon::Delete);
+    request->setPath("/api/favorites/1");
+
+    CHECK(isError(send(client, request), drogon::k401Unauthorized, "remove without login"));
+}
+
+DROGON_TEST(FavoritesVisibilityAndLimits) {
+    if (!testsupport::databaseAvailable()) {
+        return;
+    }
+
+    const auto owner = newClient();
+    const auto visitor = newClient();
+
+    REQUIRE(signIn(owner, "favorites-owner"));
+    REQUIRE(signIn(visitor, "favorites-visitor"));
+
+    const Json::Value empty(Json::objectValue);
+
+    Json::Value shared = recipe("Shared pizza", "Flour and cheese");
+    shared["visibility"] = "public";
+
+    const std::string publicId = saveRecipe(owner, shared);
+    const std::string secondId = saveRecipe(owner, shared);
+    const std::string privateId = saveRecipe(owner, recipe("Private soup", "Water"));
+
+    REQUIRE(!publicId.empty());
+    REQUIRE(!secondId.empty());
+    REQUIRE(!privateId.empty());
+
+    const std::string path = "/api/favorites/" + publicId;
+
+    auto removeFavorite = [&](const std::string& id) {
+        auto request = drogon::HttpRequest::newHttpRequest();
+        request->setMethod(drogon::Delete);
+        request->setPath("/api/favorites/" + id);
+        return send(visitor, request);
+    };
+
+    // Nao permite salvar receitas privadas ou do proprio usuario
+    CHECK(isError(post(visitor, "/api/favorites/" + privateId, empty), drogon::k404NotFound,
+                  "favorite private recipe"));
+
+    CHECK(isError(post(owner, path, empty), drogon::k404NotFound, "favorite own recipe"));
+
+    CHECK(isError(post(visitor, "/api/favorites/abc", empty), drogon::k400BadRequest,
+                  "invalid recipe ID"));
+
+    // Preenche 24 dos 25 espacos do plano gratuito
+    for (int i = 0; i < 24; ++i) {
+        REQUIRE(!saveRecipe(visitor, recipe("Test recipe " + std::to_string(i), "Flour")).empty());
+    }
+
+    REQUIRE(hasStatus(post(visitor, path, empty), drogon::k200OK, "save public favorite"));
+
+    // Salvar novamente nao cria uma duplicata
+    CHECK(hasStatus(post(visitor, path, empty), drogon::k200OK, "save duplicate favorite"));
+
+    const auto listed = get(visitor, "/api/favorites");
+    REQUIRE(hasStatus(listed, drogon::k200OK, "list favorites"));
+    REQUIRE(listed->getJsonObject());
+
+    const auto& favorites = (*listed->getJsonObject())["recipes"];
+
+    REQUIRE(favorites.size() == 1);
+    CHECK(favorites[0]["id"].asString() == publicId);
+    CHECK(favorites[0]["available"].asBool());
+
+    // Favoritos contam para o limite do plano
+    const auto profile = get(visitor, "/api/auth/me");
+
+    REQUIRE(hasStatus(profile, drogon::k200OK, "profile with favorites"));
+    REQUIRE(profile->getJsonObject());
+
+    CHECK((*profile->getJsonObject())["user"]["recipe_count"].asUInt() == 25);
+
+    CHECK(isError(post(visitor, "/api/favorites/" + secondId, empty), drogon::k403Forbidden,
+                  "favorite at plan limit"));
+
+    CHECK(isError(post(visitor, "/api/recipes", recipe("Extra recipe", "Water")),
+                  drogon::k403Forbidden, "create at plan limit"));
+
+    // Uma receita privada nao pode revelar seu conteudo
+    shared["visibility"] = "private";
+
+    REQUIRE(hasStatus(put(owner, "/api/recipes/" + publicId, shared), drogon::k200OK,
+                      "make favorite private"));
+
+    const auto unavailable = get(visitor, "/api/favorites");
+
+    REQUIRE(hasStatus(unavailable, drogon::k200OK, "unavailable favorite"));
+    REQUIRE(unavailable->getJsonObject());
+
+    const auto& items = (*unavailable->getJsonObject())["recipes"];
+
+    REQUIRE(items.size() == 1);
+    CHECK(!items[0]["available"].asBool());
+    CHECK(items[0]["name"].asString() == "Recipe no longer available");
+    CHECK(!items[0].isMember("ingredient_list"));
+    CHECK(!items[0].isMember("image_url"));
+    CHECK(!items[0].isMember("author"));
+
+    // Remover o favorito libera um espaco
+    CHECK(hasStatus(removeFavorite(publicId), drogon::k200OK, "remove unavailable favorite"));
+
+    CHECK(hasStatus(post(visitor, "/api/favorites/" + secondId, empty), drogon::k200OK,
+                    "save after removing favorite"));
+
+    CHECK(hasStatus(removeFavorite(secondId), drogon::k200OK, "remove public favorite"));
+
+    // Remover um favorito nao deleta a receita original
+    CHECK(hasStatus(get(owner, "/api/recipes/" + secondId), drogon::k200OK,
+                    "original recipe still exists"));
+
+    // Deletar a receita original remove seus favoritos
+    REQUIRE(hasStatus(post(visitor, "/api/favorites/" + secondId, empty), drogon::k200OK,
+                      "save favorite again"));
+
+    auto deletion = drogon::HttpRequest::newHttpRequest();
+    deletion->setMethod(drogon::Delete);
+    deletion->setPath("/api/recipes/" + secondId);
+
+    REQUIRE(hasStatus(send(owner, deletion), drogon::k200OK, "delete original recipe"));
+
+    const auto finalList = get(visitor, "/api/favorites");
+
+    REQUIRE(hasStatus(finalList, drogon::k200OK, "final favorites list"));
+    REQUIRE(finalList->getJsonObject());
+
+    CHECK((*finalList->getJsonObject())["recipes"].empty());
+}

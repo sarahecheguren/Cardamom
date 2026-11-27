@@ -1,3 +1,18 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles recipe details, deletion and favorite interactions.
+
+const publicView = new URLSearchParams(window.location.search).get('source') === 'discover';
+
+if (publicView) {
+  const backLink = document.querySelector('.back-link');
+  backLink.href = 'discover.html';
+  backLink.textContent = '← Back to Discover';
+  document.querySelector('.recipe-details-header .eyebrow').textContent = 'The Cardamom community';
+}
+
 const recipeName = document.querySelector('#recipe-name');
 const recipeMessage = document.querySelector('#recipe-message');
 const recipeServings = document.querySelector('#recipe-servings');
@@ -19,6 +34,25 @@ function showError(message) {
 function displayRecipe(recipe) {
   recipeName.textContent = recipe.name;
 
+  const photo = document.querySelector('#recipe-photo');
+
+  const imageUrl = validateImageUrl(recipe.image_url);
+
+  if (imageUrl) {
+    photo.alt = recipe.name;
+
+    photo.addEventListener('load', () => {
+      photo.hidden = false;
+    });
+
+    photo.addEventListener('error', () => {
+      photo.hidden = true;
+    });
+
+    photo.referrerPolicy = 'no-referrer';
+    photo.src = `https://${imageUrl.host}${imageUrl.pathname}${imageUrl.search}${imageUrl.hash}`;
+  }
+
   recipeServings.textContent =
     recipe.servings == null ? 'Servings: —' : `Servings: ${recipe.servings}`;
 
@@ -34,12 +68,16 @@ function displayRecipe(recipe) {
 
   recipeNotes.textContent = recipe.notes || 'No additional notes.';
 
-  recipeMessage.textContent = '';
+  recipeMessage.textContent = publicView ? `Shared by ${recipe.author}` : '';
   document.title = `${recipe.name} | Cardamom`;
 
   editRecipeLink.href = `add-recipe.html?id=${encodeURIComponent(recipe.id)}`;
-  editRecipeLink.hidden = false;
-  deleteRecipeButton.hidden = false;
+  editRecipeLink.hidden = publicView;
+  deleteRecipeButton.hidden = publicView;
+
+  if (publicView) {
+    void setupFavorite(recipe.id);
+  }
 }
 
 // Checks login and loads the selected recipe
@@ -71,7 +109,8 @@ async function loadRecipe() {
     }
 
     // Request the full recipe from the backend
-    const response = await fetch(`/api/recipes/${recipeId}`, {
+    const endpoint = publicView ? '/api/discover' : '/api/recipes';
+    const response = await fetch(`${endpoint}/${recipeId}`, {
       credentials: 'same-origin',
       cache: 'no-store',
     });
@@ -107,6 +146,7 @@ async function loadRecipe() {
 
 // Deletes the selected recipe after user confirmation
 async function deleteRecipe() {
+  if (publicView) return;
   const parameters = new URLSearchParams(window.location.search);
   const recipeId = parameters.get('id');
 
@@ -160,3 +200,102 @@ deleteRecipeButton.addEventListener('click', deleteRecipe);
 
 // Load the recipe when the page opens
 void loadRecipe();
+
+async function setupFavorite(recipeId) {
+  const controls = document.querySelector('#favorite-controls');
+  const button = document.querySelector('#favorite-button');
+  const message = document.querySelector('#favorite-message');
+
+  let saved = false;
+
+  function updateButton() {
+    button.textContent = saved ? '♥ Remove from favorites' : '♡ Save to favorites';
+
+    button.classList.toggle('is-saved', saved);
+  }
+
+  controls.hidden = false;
+  message.textContent = 'Checking favorites...';
+
+  try {
+    const options = {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    };
+
+    const [personalResponse, favoritesResponse] = await Promise.all([
+      fetch('/api/recipes', options),
+      fetch('/api/favorites', options),
+    ]);
+
+    if (personalResponse.status === 401 || favoritesResponse.status === 401) {
+      window.location.replace('index.html');
+      return;
+    }
+
+    if (!personalResponse.ok || !favoritesResponse.ok) {
+      throw new Error('Unable to load favorites');
+    }
+
+    const personal = await personalResponse.json();
+    const favorites = await favoritesResponse.json();
+
+    if (!Array.isArray(personal.recipes) || !Array.isArray(favorites.recipes)) {
+      throw new Error('Invalid recipe response');
+    }
+
+    // Impede que o usuario salve sua propria receita
+    const isOwned = personal.recipes.some((recipe) => String(recipe.id) === String(recipeId));
+
+    if (isOwned) {
+      controls.hidden = true;
+      return;
+    }
+
+    saved = favorites.recipes.some((recipe) => String(recipe.id) === String(recipeId));
+
+    updateButton();
+    button.hidden = false;
+    message.textContent = '';
+  } catch {
+    message.textContent = 'Unable to check your favorites.';
+    return;
+  }
+
+  // Adiciona ou remove a receita dos favoritos
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    message.textContent = 'Updating favorites...';
+
+    try {
+      const response = await fetch(`/api/favorites/${encodeURIComponent(recipeId)}`, {
+        method: saved ? 'DELETE' : 'POST',
+        credentials: 'same-origin',
+      });
+
+      if (response.status === 401) {
+        window.location.replace('index.html');
+        return;
+      }
+
+      const body = await response.json();
+
+      if (!response.ok) {
+        message.textContent = body.error || 'Unable to update favorites.';
+        return;
+      }
+
+      saved = body.favorited === true;
+
+      updateButton();
+
+      message.textContent = saved
+        ? 'Recipe saved to your favorites.'
+        : 'Recipe removed from your favorites.';
+    } catch {
+      message.textContent = 'Could not connect to the server. Please try again.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
