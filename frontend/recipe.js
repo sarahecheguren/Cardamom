@@ -65,6 +65,10 @@ function displayRecipe(recipe) {
   editRecipeLink.href = `add-recipe.html?id=${encodeURIComponent(recipe.id)}`;
   editRecipeLink.hidden = publicView;
   deleteRecipeButton.hidden = publicView;
+
+  if (publicView) {
+    void setupFavorite(recipe.id);
+  }
 }
 
 // Checks login and loads the selected recipe
@@ -187,3 +191,102 @@ deleteRecipeButton.addEventListener('click', deleteRecipe);
 
 // Load the recipe when the page opens
 void loadRecipe();
+
+async function setupFavorite(recipeId) {
+  const controls = document.querySelector('#favorite-controls');
+  const button = document.querySelector('#favorite-button');
+  const message = document.querySelector('#favorite-message');
+
+  let saved = false;
+
+  function updateButton() {
+    button.textContent = saved ? '♥ Remove from favorites' : '♡ Save to favorites';
+
+    button.classList.toggle('is-saved', saved);
+  }
+
+  controls.hidden = false;
+  message.textContent = 'Checking favorites...';
+
+  try {
+    const options = {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    };
+
+    const [personalResponse, favoritesResponse] = await Promise.all([
+      fetch('/api/recipes', options),
+      fetch('/api/favorites', options),
+    ]);
+
+    if (personalResponse.status === 401 || favoritesResponse.status === 401) {
+      window.location.replace('index.html');
+      return;
+    }
+
+    if (!personalResponse.ok || !favoritesResponse.ok) {
+      throw new Error('Unable to load favorites');
+    }
+
+    const personal = await personalResponse.json();
+    const favorites = await favoritesResponse.json();
+
+    if (!Array.isArray(personal.recipes) || !Array.isArray(favorites.recipes)) {
+      throw new Error('Invalid recipe response');
+    }
+
+    // Impede que o usuario salve sua propria receita
+    const isOwned = personal.recipes.some((recipe) => String(recipe.id) === String(recipeId));
+
+    if (isOwned) {
+      controls.hidden = true;
+      return;
+    }
+
+    saved = favorites.recipes.some((recipe) => String(recipe.id) === String(recipeId));
+
+    updateButton();
+    button.hidden = false;
+    message.textContent = '';
+  } catch {
+    message.textContent = 'Unable to check your favorites.';
+    return;
+  }
+
+  // Adiciona ou remove a receita dos favoritos
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    message.textContent = 'Updating favorites...';
+
+    try {
+      const response = await fetch(`/api/favorites/${encodeURIComponent(recipeId)}`, {
+        method: saved ? 'DELETE' : 'POST',
+        credentials: 'same-origin',
+      });
+
+      if (response.status === 401) {
+        window.location.replace('index.html');
+        return;
+      }
+
+      const body = await response.json();
+
+      if (!response.ok) {
+        message.textContent = body.error || 'Unable to update favorites.';
+        return;
+      }
+
+      saved = body.favorited === true;
+
+      updateButton();
+
+      message.textContent = saved
+        ? 'Recipe saved to your favorites.'
+        : 'Recipe removed from your favorites.';
+    } catch {
+      message.textContent = 'Could not connect to the server. Please try again.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+}

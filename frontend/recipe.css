@@ -179,3 +179,45 @@
 .recipe-photo[hidden] {
   display: none;
 }
+
+/* Botao de receitas favoritas */
+.favorite-controls {
+  margin-top: 28px;
+  padding: 20px 0;
+  border-top: 1px solid #d8dfd3;
+}
+
+.favorite-button {
+  padding: 12px 22px;
+  border: 1px solid #31583b;
+  border-radius: 8px;
+  background: transparent;
+  color: #31583b;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.favorite-button:hover:not(:disabled) {
+  background: #edf2e9;
+}
+
+.favorite-button.is-saved {
+  background: #e1ebdd;
+}
+
+.favorite-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.favorite-controls[hidden],
+.favorite-button[hidden] {
+  display: none;
+}
+
+#favorite-message {
+  color: #677667;
+  font-size: 14px;
+  margin-top: 10px;
+}

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="dashboard.css" />
     <script src="dashboard.js" defer></script>
     <script src="recommendations.js" defer></script>
+    <script src="favorites.js" defer></script>
   </head>
   <body>
     <header class="dashboard-header">
@@ -55,6 +56,21 @@
         <p id="collection-message" role="status" aria-live="polite">Loading your recipes...</p>
 
         <div id="recipe-grid" class="recipe-grid"></div>
+      </section>
+
+      <section class="recipes-section favorites-section" aria-labelledby="favorites-heading">
+        <div class="section-heading">
+          <h2 id="favorites-heading">Your favorites</h2>
+          <span id="favorites-count" class="demo-label"></span>
+        </div>
+
+        <p class="recommendations-description">Keep the community recipes you love in one place.</p>
+
+        <p id="favorites-message" role="status" aria-live="polite">Loading your favorites...</p>
+
+        <div id="favorites-grid" class="recipe-grid"></div>
+
+        <a href="discover.html" class="discover-link"> Find more recipes &rarr; </a>
       </section>
 
       <section
