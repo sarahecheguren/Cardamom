@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Displays saved favorites and handles their removal.
+
 (() => {
   const grid = document.querySelector('#favorites-grid');
   const count = document.querySelector('#favorites-count');

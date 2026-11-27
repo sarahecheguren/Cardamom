@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles recipe details, deletion and favorite interactions.
+
 const publicView = new URLSearchParams(window.location.search).get('source') === 'discover';
 
 if (publicView) {

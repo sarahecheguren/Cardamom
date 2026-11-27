@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles user login, registration and authentication.
+
 // Handles the login page and the registration preview.
 const form = document.querySelector('#auth-form');
 const message = document.querySelector('#form-message');

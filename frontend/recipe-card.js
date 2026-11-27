@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Provides shared recipe card rendering and image URL validation.
+
 // Valida a URL da imagem antes de carregar
 function validateImageUrl(value) {
   if (typeof value !== 'string' || value.length > 2048) {

@@ -1,3 +1,11 @@
+/*
+ * University of Florida
+ * Cardamom Project
+ * By Gianluca Perrella (frontend contributions)
+ * CEN3031 Fall, 2026
+ * Styles the recipe details page and its action buttons.
+ */
+
 /* Link para voltar ao dashboard */
 .back-link {
   display: inline-block;

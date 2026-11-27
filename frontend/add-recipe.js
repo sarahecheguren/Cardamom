@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles recipe form validation, creation and editing.
+
 const recipeForm = document.querySelector('#recipe-form');
 const saveButton = recipeForm.querySelector('[type="submit"]');
 const message = recipeForm.querySelector('.form-note');

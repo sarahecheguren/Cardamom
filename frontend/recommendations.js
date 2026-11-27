@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Loads and randomly selects community recipe recommendations.
+
 (() => {
   const grid = document.querySelector('#recommendations-grid');
   const message = document.querySelector('#recommendations-message');

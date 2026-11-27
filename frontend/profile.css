@@ -1,3 +1,11 @@
+/*
+ * University of Florida
+ * Cardamom Project
+ * By Gianluca Perrella (frontend contributions)
+ * CEN3031 Fall, 2026
+ * Styles the user profile and account management interface.
+ */
+
 /* Profile page introduction */
 .profile-intro {
   max-width: 720px;

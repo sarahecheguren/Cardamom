@@ -1,3 +1,11 @@
+/*
+ * University of Florida
+ * Cardamom Project
+ * By Gianluca Perrella (frontend contributions)
+ * CEN3031 Fall, 2026
+ * Defines the dashboard layout, navigation and recipe card styling.
+ */
+
 @import url('./styles.css');
 
 /* Layout principal do dashboard */

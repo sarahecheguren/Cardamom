@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles the personal dashboard, recipe search and welcome messages.
+
 const logoutButton = document.querySelector('#logout-button');
 const recipeGrid = document.querySelector('#recipe-grid');
 const recipeCount = document.querySelector('#recipe-count');
