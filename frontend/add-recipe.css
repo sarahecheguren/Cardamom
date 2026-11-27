@@ -1,3 +1,11 @@
+/*
+ * University of Florida
+ * Cardamom Project
+ * By Gianluca Perrella (frontend contributions)
+ * CEN3031 Fall, 2026
+ * Styles the recipe creation and editing forms.
+ */
+
 /* Titulo da pagina */
 .page-intro {
   max-width: 720px;
@@ -36,6 +44,7 @@
 }
 
 .form-field input,
+.form-field select,
 .form-field textarea {
   width: 100%;
   padding: 13px 15px;
@@ -48,6 +57,7 @@
 }
 
 .form-field input:focus,
+.form-field select:focus,
 .form-field textarea:focus {
   border-color: var(--green);
 }
@@ -109,4 +119,9 @@
     flex-wrap: wrap;
     justify-content: space-between;
   }
+}
+
+.form-field small {
+  color: var(--muted);
+  font-size: 13px;
 }

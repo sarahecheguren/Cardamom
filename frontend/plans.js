@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles subscription plan information and interactions.
+
 const plansMessage = document.querySelector('#plans-message');
 const freeStatus = document.querySelector('#free-status');
 const premiumStatus = document.querySelector('#premium-status');

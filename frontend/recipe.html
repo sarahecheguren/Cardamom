@@ -1,4 +1,11 @@
 <!doctype html>
+<!--
+  University of Florida
+  Cardamom Project
+  By Gianluca Perrella (frontend contributions)
+  CEN3031 Fall, 2026
+  Displays the ingredients, instructions and details of a recipe.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,6 +14,7 @@
 
     <link rel="stylesheet" href="dashboard.css" />
     <link rel="stylesheet" href="recipe.css" />
+    <script src="recipe-card.js" defer></script>
     <script src="recipe.js" defer></script>
   </head>
 
@@ -42,6 +50,8 @@
           </div>
         </header>
 
+        <img id="recipe-photo" class="recipe-photo" alt="" referrerpolicy="no-referrer" hidden />
+
         <section class="recipe-details-section">
           <h2>Ingredients</h2>
           <p id="recipe-ingredients"></p>
@@ -56,6 +66,13 @@
           <h2>Additional Notes</h2>
           <p id="recipe-notes"></p>
         </section>
+
+        <div id="favorite-controls" class="favorite-controls" hidden>
+          <button id="favorite-button" class="favorite-button" type="button" hidden>
+            Save to favorites
+          </button>
+          <p id="favorite-message" role="status" aria-live="polite"></p>
+        </div>
 
         <!-- Edit and delete actions at the bottom of the recipe -->
         <div class="delete-recipe-actions">

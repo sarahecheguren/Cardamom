@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles user login, registration and authentication.
+
 // Handles the login page and the registration preview.
 const form = document.querySelector('#auth-form');
 const message = document.querySelector('#form-message');
@@ -102,6 +108,13 @@ form.addEventListener('submit', async (event) => {
       if (!response.ok) {
         showMessage(body.error || 'Unable to create account. Please try again.');
         return;
+      }
+
+      // Identifica uma conta que acabou de ser criada
+      try {
+        sessionStorage.setItem('cardamom_new_account', email.value.trim().toLowerCase());
+      } catch {
+        // Registration still works if browser storage is unavailable.
       }
 
       form.reset();

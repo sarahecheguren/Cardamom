@@ -2,6 +2,7 @@
 
 #include <json/json.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -16,6 +17,8 @@ struct RecipeInput {
     std::string ingredients;
     std::string steps;
     std::string notes;
+    std::string imageUrl;
+    std::string visibility;
     std::string servings;
     std::string prepMinutes;
     std::string cookMinutes;
@@ -78,6 +81,38 @@ inline bool readRecipeInput(const std::shared_ptr<Json::Value>& input, RecipeInp
     if (!readOptionalText("steps", recipe.steps) || !readOptionalText("notes", recipe.notes)) {
         error = "Steps and notes must be text of at most 65535 bytes each.";
         return false;
+    }
+
+    if (!readOptionalText("image_url", recipe.imageUrl)) {
+        error = "Image URL must be text.";
+        return false;
+    }
+
+    if (!recipe.imageUrl.empty()) {
+        const auto& url = recipe.imageUrl;
+        const auto hostEnd = url.find_first_of("/?#", 8);
+
+        if (url.size() > 2048 || url.compare(0, 8, "https://") != 0 || url.size() <= 8 ||
+            hostEnd == 8 ||
+            std::any_of(url.begin(), url.end(),
+                        [](unsigned char c) { return c <= 32 || c == 127 || c == 92; }) ||
+            url.substr(8, hostEnd == std::string::npos ? std::string::npos : hostEnd - 8)
+                    .find('@') != std::string::npos) {
+            error = "Please enter a valid HTTPS image URL.";
+            return false;
+        }
+    }
+
+    const auto& visibility = (*input)["visibility"];
+
+    if (!visibility.isNull()) {
+        if (!visibility.isString() ||
+            (visibility.asString() != "private" && visibility.asString() != "public")) {
+            error = "Recipe visibility must be private or public.";
+            return false;
+        }
+
+        recipe.visibility = visibility.asString();
     }
 
     auto readOptionalNumber = [&](const char* field, unsigned int minimum, std::string& value) {

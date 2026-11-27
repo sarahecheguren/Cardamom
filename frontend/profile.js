@@ -1,3 +1,9 @@
+// University of Florida
+// Cardamom Project
+// By Gianluca Perrella (frontend contributions)
+// CEN3031 Fall, 2026
+// Handles profile information and account management.
+
 const profileMessage = document.querySelector('#profile-message');
 const profileName = document.querySelector('#profile-name');
 const profileEmail = document.querySelector('#profile-email');

@@ -1,11 +1,21 @@
 <!doctype html>
+<!--
+  University of Florida
+  Cardamom Project
+  By Gianluca Perrella (frontend contributions)
+  CEN3031 Fall, 2026
+  Provides the personal dashboard, favorites and recommendations sections.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>My Recipes | Cardamom</title>
     <link rel="stylesheet" href="dashboard.css" />
+    <script src="recipe-card.js" defer></script>
     <script src="dashboard.js" defer></script>
+    <script src="recommendations.js" defer></script>
+    <script src="favorites.js" defer></script>
   </head>
   <body>
     <header class="dashboard-header">
@@ -16,6 +26,7 @@
 
       <nav aria-label="Main navigation">
         <span class="current-page">My Recipes</span>
+        <a href="discover.html">Discover</a>
         <a href="plans.html">Compare Plans</a>
         <a href="profile.html">My Profile</a>
         <button id="logout-button" type="button">Log out</button>
@@ -26,8 +37,8 @@
       <section class="welcome-section">
         <div>
           <p class="eyebrow">Your personal cookbook</p>
-          <h1>My Recipes</h1>
-          <p>Keep all your favorite recipes in one place.</p>
+          <h1 id="welcome-heading">Welcome to Cardamom!</h1>
+          <p id="welcome-description">What are we cooking today?</p>
         </div>
 
         <a href="add-recipe.html" class="add-button">+ Add Recipe</a>
@@ -39,9 +50,59 @@
           <span id="recipe-count" class="demo-label"></span>
         </div>
 
+        <div class="recipe-search">
+          <label for="recipe-search">Search your recipes</label>
+          <input
+            id="recipe-search"
+            type="search"
+            placeholder="Search by recipe name or ingredient..."
+            autocomplete="off"
+            disabled
+          />
+        </div>
+
         <p id="collection-message" role="status" aria-live="polite">Loading your recipes...</p>
 
         <div id="recipe-grid" class="recipe-grid"></div>
+      </section>
+
+      <section class="recipes-section favorites-section" aria-labelledby="favorites-heading">
+        <div class="section-heading">
+          <h2 id="favorites-heading">Your favorites</h2>
+          <span id="favorites-count" class="demo-label"></span>
+        </div>
+
+        <p class="recommendations-description">Keep the community recipes you love in one place.</p>
+
+        <p id="favorites-message" role="status" aria-live="polite">Loading your favorites...</p>
+
+        <div id="favorites-grid" class="recipe-grid"></div>
+
+        <a href="discover.html" class="discover-link"> Find more recipes &rarr; </a>
+      </section>
+
+      <section
+        class="recipes-section recommendations-section"
+        aria-labelledby="recommendations-heading"
+      >
+        <div class="section-heading">
+          <h2 id="recommendations-heading">Recommended for you</h2>
+          <button id="shuffle-recipes" class="shuffle-button" type="button" disabled>
+            Shuffle recipes
+          </button>
+        </div>
+
+        <p class="recommendations-description">
+          Discover something new from the Cardamom community.
+        </p>
+
+        <p id="recommendations-message" role="status" aria-live="polite">
+          Loading recommendations...
+        </p>
+
+        <div id="recommendations-grid" class="recipe-grid"></div>
+
+        <a href="discover.html" class="discover-link"> Explore all public recipes &rarr; </a>
       </section>
     </main>
 
